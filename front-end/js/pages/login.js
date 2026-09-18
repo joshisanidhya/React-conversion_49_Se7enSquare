@@ -1,0 +1,381 @@
+/**
+ * Gameunity — Login / Register / Forgot Password Logic
+ * Fixed: Password Strength Meter, Persistent Registration, and Login matching.
+ */
+
+// ==========================================
+// 1. STATE & PERSISTENCE
+// ==========================================
+let currentTab = 'login';
+let toastTimeout;
+
+const ROLE_REDIRECTS = {
+    admin: 'admin-dashboard.html',
+    owner: 'owner-dashboard.html',
+    community_manager: 'events.html',
+    organizer: 'organizer-dashboard.html',
+    moderator: 'dashboard.html',
+    user: 'dashboard.html',
+    gamer: 'dashboard.html'
+};
+
+// Default users for the first-time load.
+// `id` is pinned to match the corresponding backend seed user in in-memory-db.ts
+// (admin01=1, mod01=2, cm01=3, player01=4, sanidhya=5, org01=6) — usernames differ
+// between the demo personas and backend seed, so /auth/login never matches and
+// these always resolve through the local fallback in handleLogin(); without a
+// matching numeric id here, every backend call that needs userId (subscriptions,
+// organiser applications, payments, ...) would silently operate on `undefined`.
+const DEFAULT_USERS = [
+    { id: 1, email: 'rajat@gameunity.com', username: 'rajat', firstName: 'Rajat', lastName: 'Jain', password: 'Rajat@123', role: 'admin', avatar: null },
+    { id: 2, email: 'karmanya@gameunity.com', username: 'karmanya', firstName: 'Karmanya', lastName: 'Bansal', password: 'Karmanya@123', role: 'moderator', avatar: null },
+    { id: 3, email: 'anant@gameunity.com', username: 'anant', firstName: 'Anant', lastName: 'Gupta', password: 'Demo@123', role: 'community_manager', avatar: null },
+    { id: 6, email: 'organizer@gameunity.com', username: 'org01', firstName: 'Priya', lastName: 'Verma', password: 'Demo@123', role: 'organizer', avatar: null },
+    { id: 4, email: 'awadhesh@gameunity.com', username: 'awadhesh', firstName: 'Awadhesh', lastName: 'Kumar', password: 'Demo@123', role: 'user', avatar: null },
+    { id: 5, email: 'sanidhya@gameunity.com', username: 'sanidhya', firstName: 'Sanidhya', lastName: 'Joshi', password: 'Demo@123', role: 'owner', avatar: null }
+];
+
+/** * Persistent Mock Database Helpers 
+ */
+function getAllUsers() {
+    let stored = localStorage.getItem('gameunity_accounts');
+    let users = stored ? JSON.parse(stored) : [];
+    
+    // Force Sync Default Personas (Ensure passwords/roles are always current)
+    DEFAULT_USERS.forEach(defUser => {
+        const index = users.findIndex(u => u.username.toLowerCase() === defUser.username.toLowerCase() || u.email.toLowerCase() === defUser.email.toLowerCase());
+        if (index === -1) {
+            users.push(defUser);
+        } else {
+            // Update existing record to match the default (in case of stale data)
+            users[index] = { ...users[index], ...defUser };
+        }
+    });
+
+    users = users.map(user => ({
+        ...user,
+        role: typeof normalizeRole === 'function' ? normalizeRole(user.role) : (user.role === 'gamer' ? 'user' : user.role)
+    }));
+    
+    localStorage.setItem('gameunity_accounts', JSON.stringify(users));
+    return users;
+}
+
+function saveNewUser(userData) {
+    const users = getAllUsers();
+    // Check if user already exists
+    const exists = users.some(u => u.email === userData.email || u.username === userData.username);
+    if (exists) return false;
+    
+    users.push(userData);
+    localStorage.setItem('gameunity_accounts', JSON.stringify(users));
+    return true;
+}
+
+// ==========================================
+// 2. TAB SWITCHING
+// ==========================================
+
+window.switchAuthTab = function(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.add('hidden'));
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+
+    const tabsContainer = document.getElementById('authTabs');
+    const subtitle = document.getElementById('loginSubtitle');
+
+    if (tab === 'login') {
+        document.getElementById('form-login').classList.remove('hidden');
+        document.getElementById('tab-login').classList.add('active');
+        tabsContainer.style.display = 'flex';
+        if (subtitle) subtitle.textContent = 'Welcome back! Sign in to your account.';
+    } else if (tab === 'register') {
+        document.getElementById('form-register').classList.remove('hidden');
+        document.getElementById('tab-register').classList.add('active');
+        tabsContainer.style.display = 'flex';
+        if (subtitle) subtitle.textContent = 'Create a free account to get started.';
+    } else if (tab === 'forgot') {
+        document.getElementById('form-forgot').classList.remove('hidden');
+        tabsContainer.style.display = 'none';
+        if (subtitle) subtitle.textContent = '';
+    }
+    clearAllErrors();
+};
+
+// ==========================================
+// 3. VALIDATION HELPERS
+// ==========================================
+
+function showError(fieldId, message) {
+    const errorEl = document.getElementById(fieldId + '-error');
+    const inputEl = document.getElementById(fieldId);
+    if (errorEl) { errorEl.textContent = message; errorEl.classList.add('visible'); }
+    if (inputEl) { inputEl.classList.add('error'); }
+}
+
+function clearAllErrors() {
+    document.querySelectorAll('.form-error').forEach(e => { e.textContent = ''; e.classList.remove('visible'); });
+    document.querySelectorAll('.form-input').forEach(i => { i.classList.remove('error', 'success'); });
+}
+
+function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+function isValidHandle(handle) { return /^[a-zA-Z0-9_]{3,20}$/.test(handle); }
+
+// ==========================================
+// 4. LOGIN HANDLER
+// ==========================================
+
+window.handleLogin = function(e) {
+    e.preventDefault();
+    clearAllErrors();
+
+    const inputVal = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const role = typeof normalizeRole === 'function'
+        ? normalizeRole(document.getElementById('login-role').value)
+        : document.getElementById('login-role').value;
+
+    if (!inputVal || !password || !role) {
+        showToast('⚠️', 'Please fill all login fields.');
+        shakeCard();
+        return;
+    }
+
+    const btn = document.getElementById('login-btn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    setTimeout(async () => {
+        const users = getAllUsers();
+        let matchedUser = null;
+
+        try {
+            matchedUser = window.API?.auth
+                ? await window.API.auth.login({ login: inputVal, password, role })
+                : null;
+        } catch (err) {
+            console.warn('[Login] Backend login failed, checking local accounts:', err.message);
+        }
+
+        if (!matchedUser) {
+            matchedUser = users.find(u =>
+                (u.email.toLowerCase() === inputVal.toLowerCase() || u.username.toLowerCase() === inputVal.toLowerCase()) &&
+                u.password === password &&
+                (typeof normalizeRole === 'function' ? normalizeRole(u.role) : u.role) === role
+            );
+        }
+
+        if (!matchedUser) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            showError('login-password', 'Invalid credentials or role.');
+            showToast('❌', 'Login failed.');
+            shakeCard();
+            return;
+        }
+
+        localStorage.setItem('nexus_user', JSON.stringify({
+            id: matchedUser.id,
+            firstName: matchedUser.firstName || (matchedUser.fullname || matchedUser.username).split(' ')[0] || matchedUser.username,
+            lastName: matchedUser.lastName || (matchedUser.fullname || '').split(' ').slice(1).join(' '),
+            name: matchedUser.fullname || `${matchedUser.firstName || ''} ${matchedUser.lastName || ''}`.trim() || matchedUser.username,
+            username: matchedUser.username,
+            email: matchedUser.email,
+            phone: matchedUser.phone,
+            bio: matchedUser.bio,
+            role: matchedUser.role,
+            avatar: matchedUser.avatar || null,
+            loginTime: new Date().toISOString()
+        }));
+        if (typeof persistCurrentUser === 'function') {
+            persistCurrentUser(JSON.parse(localStorage.getItem('nexus_user')));
+        } else {
+            localStorage.setItem('currentUser', localStorage.getItem('nexus_user'));
+            localStorage.setItem('role', matchedUser.role);
+        }
+
+        showToast('✅', 'Login successful!');
+        setTimeout(() => { window.location.href = ROLE_REDIRECTS[role] || 'dashboard.html'; }, 800);
+    }, 1200);
+};
+
+// ==========================================
+// 5. REGISTER HANDLER
+// ==========================================
+
+window.handleRegister = function(e) {
+    e.preventDefault();
+    clearAllErrors();
+
+    const fullname = document.getElementById('reg-fullname').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const handle = document.getElementById('reg-handle').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const confirm = document.getElementById('reg-confirm').value;
+    const role = typeof normalizeRole === 'function'
+        ? normalizeRole(document.getElementById('reg-role').value)
+        : document.getElementById('reg-role').value;
+    const terms = document.getElementById('reg-terms').checked;
+
+    let valid = true;
+    if (!fullname) { showError('reg-fullname', 'Required'); valid = false; }
+    if (!isValidEmail(email)) { showError('reg-email', 'Invalid email'); valid = false; }
+    if (!isValidHandle(handle)) { showError('reg-handle', '3-20 chars only'); valid = false; }
+    if (password.length < 8) { showError('reg-password', 'Min 8 chars'); valid = false; }
+    if (password !== confirm) { showError('reg-confirm', 'No match'); valid = false; }
+    if (!role) { showError('reg-role', 'Select role'); valid = false; }
+    if (!terms) { showToast('⚠️', 'Accept terms'); valid = false; }
+
+    if (!valid) { shakeCard(); return; }
+
+    const btn = document.getElementById('register-btn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    setTimeout(async () => {
+        const newUser = { username: handle, fullname, email, password, role };
+        let registeredUser = null;
+        if (saveNewUser(newUser)) {
+            try {
+                if (window.API?.auth) {
+                    const nameParts = fullname.split(' ').filter(Boolean);
+                    registeredUser = await window.API.auth.register({
+                        username: handle,
+                        email,
+                        password,
+                        role,
+                        firstName: nameParts[0] || '',
+                        lastName: nameParts.slice(1).join(' ')
+                    });
+                }
+            } catch (err) {
+                console.warn('[Register] Backend register failed, keeping local account:', err.message);
+            }
+            showToast('🎉', 'Account ready!');
+            // Auto-login
+            const nameParts = fullname.split(' ').filter(Boolean);
+            const user = {
+                id: registeredUser?.id,
+                firstName: nameParts[0] || '',
+                lastName: nameParts.slice(1).join(' '),
+                name: fullname,
+                username: handle,
+                email,
+                role,
+                avatar: null,
+                loginTime: new Date().toISOString()
+            };
+            if (typeof persistCurrentUser === 'function') persistCurrentUser(user);
+            else {
+                localStorage.setItem('nexus_user', JSON.stringify(user));
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                localStorage.setItem('role', role);
+            }
+            setTimeout(() => { window.location.href = ROLE_REDIRECTS[role] || 'dashboard.html'; }, 1000);
+        } else {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            showError('reg-email', 'User already exists');
+        }
+    }, 1500);
+};
+
+// ==========================================
+// 6. PASSWORD STRENGTH METER (Fixed)
+// ==========================================
+
+function checkPasswordStrength(password) {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[!@#$%^&*]/.test(password)) score++;
+    const levels = ['', 'weak', 'fair', 'good', 'strong'];
+    const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+    return { level: levels[score] || 'weak', label: labels[score] || 'Weak' };
+}
+
+function initPasswordStrength() {
+    const passwordInput = document.getElementById('reg-password');
+    const strengthFill = document.getElementById('strength-fill');
+    const strengthText = document.getElementById('strength-text');
+
+    if (!passwordInput || !strengthFill) return;
+
+    passwordInput.addEventListener('input', function() {
+        if (!this.value) {
+            strengthFill.className = 'strength-fill';
+            strengthText.textContent = '';
+            return;
+        }
+        const { level, label } = checkPasswordStrength(this.value);
+        strengthFill.className = 'strength-fill ' + level;
+        strengthText.textContent = label;
+    });
+}
+
+// ==========================================
+// 7. UI HELPERS
+// ==========================================
+
+window.togglePassword = function(btn) {
+    const input = btn.previousElementSibling;
+    input.type = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? '🙈' : '👁️';
+};
+
+window.quickLogin = function(username, role) {
+    // 1. Ensure we are on the login tab
+    if (typeof switchAuthTab === 'function') switchAuthTab('login');
+    
+    const users = getAllUsers();
+    const user = users.find(u => u.username === username);
+    
+    const emailInput = document.getElementById('login-email');
+    const passInput = document.getElementById('login-password');
+    const roleInput = document.getElementById('login-role');
+    
+    if (emailInput) emailInput.value = username;
+    if (passInput) passInput.value = user ? user.password : 'Demo@123';
+    if (roleInput) roleInput.value = role;
+    
+    // 2. Explicitly call handleLogin with a mock event
+    if (typeof handleLogin === 'function') {
+        handleLogin({ preventDefault: () => {} });
+    }
+};
+
+function shakeCard() {
+    const card = document.getElementById('loginCard');
+    if (card) { card.classList.add('shake'); setTimeout(() => card.classList.remove('shake'), 400); }
+}
+
+window.showToast = function(icon, msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastIcon').textContent = icon;
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => t.classList.remove('show'), 2800);
+};
+
+// ==========================================
+// 8. INITIALIZATION
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Restore Strength Meter
+    initPasswordStrength();
+
+    // 2. Handle background and session check
+    const session = localStorage.getItem('nexus_user');
+    if (session) {
+        try {
+            const user = JSON.parse(session);
+            window.location.href = ROLE_REDIRECTS[user.role] || 'dashboard.html';
+        } catch(e) { localStorage.removeItem('nexus_user'); }
+    }
+
+    // 3. Initialize "Database"
+    getAllUsers();
+});

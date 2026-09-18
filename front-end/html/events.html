@@ -1,0 +1,282 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Gameunity – Events</title>
+  <meta name="description" content="Browse and register for upcoming gaming events, hackathons, and workshops on Gameunity.">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+  <link href="../css/global.css" rel="stylesheet">
+  <link href="../css/components/sidebar.css" rel="stylesheet">
+  <link href="../css/pages/events.css" rel="stylesheet">
+  
+</head>
+
+<body>
+
+  <!-- ─── APP SHELL ─── -->
+  <div class="app-shell">
+    <div id="sidebar-container"></div>
+
+    <!-- ─── MAIN ─── -->
+    <div class="main">
+    <header class="header">
+      <div class="header-title">Events</div>
+      <div class="header-actions">
+        <div class="icon-btn" onclick="toggleNotifications(event)">🔔<div class="notif-dot"></div></div>
+        <div class="header-avatar user-avatar" onclick="window.location.href='profile-settings.html'"></div>
+      </div>
+    </header>
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('upcoming',this)">📅 Upcoming <span class="tab-count">2</span></button>
+      <button class="tab-btn" onclick="switchTab('registered',this)">🎟 My Registrations <span class="tab-count">1</span></button>
+      <button class="tab-btn" id="createTabButton" onclick="switchTab('create',this)">✦ Create Event</button>
+      <div class="tab-cta"></div>
+      <button class="btn-create" onclick="switchTab('create',document.getElementById('createTabButton'))">+ Create
+        Event</button>
+    </div>
+    <!-- ── UPCOMING EVENTS TAB ── -->
+    <div class="content active" id="tab-upcoming">
+      <!-- Filters -->
+      <div class="filters-row">
+        <div class="filter-chip on" onclick="toggleChip(this)">✦ All Events</div>
+      </div>
+      <!-- Featured Event -->
+      <div class="featured-event">
+        <div class="feat-glow"></div>
+        <div class="feat-content">
+          <div>
+            <div class="feat-badge-row">
+              <span class="ev-badge badge-live">● Live Registration</span>
+              <span class="ev-badge badge-free">🆓 Free</span>
+              <span class="ev-badge badge-online">🌐 Online</span>
+            </div>
+            <div class="feat-title">Gaming Hackathon</div>
+            <div class="feat-desc">48-hour hackathon open to all skill levels. Build anything — solo or in teams up to
+              4. Prizes worth $2,000 across 3 categories: Best UI, Most Innovative, and Best Use of Gameunity API.</div>
+            <div class="feat-community">
+              <div class="feat-comm-av">⚡</div>
+              <span class="feat-comm-name">Hosted by <strong class="u-extracted-173">Pro Gamers</strong></span>
+            </div>
+          </div>
+          <div class="feat-bottom">
+            <div class="feat-meta-item">🗓 March 7, 2025</div>
+            <div class="feat-meta-item">⏰ Starts 2:00 PM IST</div>
+            <div class="feat-meta-item">👥 248 registered</div>
+            <div class="feat-meta-item">🏆 $2,000 in prizes</div>
+          </div>
+        </div>
+        <div class="feat-actions">
+          <div class="attendee-stack">
+            <div class="avatar-stack">
+              <div class="av grad-purple user-avatar"></div>
+              <div class="av grad-green">AK</div>
+              <div class="av u-extracted-254">+246</div>
+            </div>
+            <div class="attendee-count">248 people registered</div>
+          </div>
+          <div>
+            <div class="seats-left">⚡ 52 seats left</div>
+            <button id="featured-register" class="btn-register u-extracted-141" aria-label="Register for featured event" onclick="registerFeaturedEvent(this)">Register Now</button>
+          </div>
+        </div>
+      </div>
+      <!-- Section Header -->
+      <div class="section-header">
+        <div>
+          <div class="section-title">All Upcoming Events</div>
+          <div class="section-sub u-extracted-255">2 events across your communities</div>
+        </div>
+      </div>
+      <!-- Events Grid -->
+      <div class="events-grid" id="upcomingGrid">
+        <!-- Dynamic Cards Injected by events.js -->
+      </div>
+    </div>
+
+  <!-- ── MY REGISTRATIONS TAB ── -->
+  <div class="content" id="tab-registered">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🎟 My Registrations</div>
+        <div class="section-sub" id="reg-sub-header">0 upcoming events you're registered for</div>
+      </div>
+    </div>
+  <div class="reg-list" id="regGrid">
+      <!-- Dynamic Cards Injected by events.js -->
+    </div>
+  </div>
+
+  <!-- ── CREATE EVENT TAB ── -->
+  <div class="content" id="tab-create">
+    <form id="createEventForm" class="create-layout">
+      <div class="form-card">
+        <div class="form-section-title">✦ Create a New Event</div>
+        <div class="field">
+          <label>Event Title *</label>
+          <input id="evTitle" name="title" oninput="updatePreview()" placeholder="e.g. MOBA Deep Dive Workshop" type="text">
+          <div class="error-msg" id="err-title"></div>
+        </div>
+        <div class="field">
+          <label>Description *</label>
+          <textarea id="evDesc" name="description" oninput="updatePreview()" placeholder="Tell attendees what to expect…" rows="3"></textarea>
+          <div class="error-msg" id="err-desc"></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Date *</label>
+            <input id="evDate" name="date" oninput="updatePreview()" type="date">
+            <div class="error-msg" id="err-date"></div>
+          </div>
+          <div class="field">
+            <label>Time *</label>
+            <input id="evTime" name="time" oninput="updatePreview()" type="time">
+            <div class="error-msg" id="err-time"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Event Type</label>
+          <div class="type-toggle">
+            <div class="type-opt on" onclick="setType(this,'Online')">🌐 Online</div>
+            <div class="type-opt" onclick="setType(this,'In-Person')">📍 In-Person</div>
+            <div class="type-opt" onclick="setType(this,'Hybrid')">🔀 Hybrid</div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Community *</label>
+            <select id="evCommunity" name="community">
+              <!-- Populated dynamically -->
+            </select>
+            <div class="error-msg" id="err-community"></div>
+          </div>
+          <div class="field">
+            <label>Max Attendees *</label>
+            <input id="evMax" name="capacity" placeholder="e.g. 50" type="number" min="1" value="50">
+            <div class="error-msg" id="err-max"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Category *</label>
+          <select id="evCategory" name="category">
+            <option value="Hackathon">🏆 Hackathon</option>
+            <option value="Workshop">🎓 Workshop</option>
+            <option value="AMA">🎙 AMA / Talk</option>
+            <option value="Tournament">🎮 Gaming / Tournament</option>
+            <option value="Discussion">📖 Discussion</option>
+            <option value="Social">🎉 Social / Meetup</option>
+          </select>
+          <div class="error-msg" id="err-category"></div>
+        </div>
+        <div class="field">
+          <label>Cover Image (Optional)</label>
+          <div id="uploadArea" class="upload-area" tabindex="0" role="button" aria-label="Upload cover image" onclick="document.getElementById('evCover').click()">
+            <div id="uploadDefault">
+                <div class="upload-icon">🖼</div>
+                <div class="upload-text" id="uploadText">Drag &amp; drop or click to upload</div>
+                <div class="upload-sub">Using default gaming banner if empty</div>
+            </div>
+            <div id="uploadPreview" class="upload-preview" style="display:none">
+                <!-- Image injected here -->
+            </div>
+          </div>
+          <div class="error-msg" id="err-cover"></div>
+          <input id="evCover" type="file" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+        </div>
+        <div class="form-actions">
+          <button type="button" id="saveDraftBtn" class="btn-draft" onclick="saveDraft()">Save Draft</button>
+          <button type="button" id="loadDraftBtn" class="btn-draft" onclick="loadLatestDraft()">Load Last Draft</button>
+          <button type="submit" id="publishEventBtn" class="btn-publish">Request Approval</button>
+        </div>
+      </div>
+      <!-- Preview + Tips -->
+      <div class="preview-card-wrap">
+        <div class="preview-label">Live Preview</div>
+        <div class="preview-card">
+          <div class="preview-banner">📅</div>
+          <div class="preview-body">
+            <div class="preview-title" id="prevTitle">Your event title</div>
+            <div class="preview-meta">
+              <div class="preview-meta-row" id="prevDate">🗓 Select a date and time</div>
+              <div class="preview-meta-row">🌐 Online · ⚡ Pro Gamers</div>
+              <div class="preview-meta-row">🏆 Hackathon · 🆓 Free</div>
+            </div>
+          </div>
+        </div>
+        <div class="tips-card">
+          <div class="tips-title">✦ Tips for great events</div>
+          <div class="tip-row">
+            <div class="tip-dot"></div>Use a clear, descriptive title that states what attendees will learn or do.
+          </div>
+          <div class="tip-row">
+            <div class="tip-dot"></div>Add a cover image — events with images get 3× more registrations.
+          </div>
+          <div class="tip-row">
+            <div class="tip-dot"></div>Set a max capacity to create urgency and manage expectations.
+          </div>
+          <div class="tip-row">
+            <div class="tip-dot"></div>Post in relevant channels to announce your event after publishing.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- end main -->
+  <div id="eventModal" class="event-modal hidden" onclick="if(event.target===this)closeModal()">
+    <div class="event-modal-content">
+      <button class="event-modal-close" onclick="closeModal()" aria-label="Close event details">×</button>
+      <div class="modal-status" id="modalStatus"></div>
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+      <div class="modal-detail-grid">
+        <p id="modalDate"></p>
+        <p id="modalCommunity"></p>
+        <p id="modalCapacity"></p>
+        <p id="modalCategory"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registration details modal — collected before an event registration is confirmed -->
+  <div id="registerModal" class="event-modal hidden" onclick="if(event.target===this)closeRegisterModal()">
+    <div class="event-modal-content">
+      <button class="event-modal-close" onclick="closeRegisterModal()" aria-label="Close registration form">×</button>
+      <h2>Register for <span id="regModalEventTitle"></span></h2>
+      <p style="color:var(--text-3,#9ca3af);font-size:13px;margin-top:-8px;">We need a few details before confirming your spot.</p>
+      <div class="field">
+        <label>Full Name *</label>
+        <input id="regFullName" type="text" placeholder="Your full name">
+        <div class="error-msg" id="err-regFullName"></div>
+      </div>
+      <div class="field">
+        <label>Email *</label>
+        <input id="regEmail" type="email" placeholder="you@example.com">
+        <div class="error-msg" id="err-regEmail"></div>
+      </div>
+      <div class="field">
+        <label>Phone Number *</label>
+        <input id="regPhone" type="tel" placeholder="e.g. 9876543210">
+        <div class="error-msg" id="err-regPhone"></div>
+      </div>
+      <div class="field">
+        <label>In-Game ID / Username *</label>
+        <input id="regInGameId" type="text" placeholder="Your in-game handle">
+        <div class="error-msg" id="err-regInGameId"></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-draft" onclick="closeRegisterModal()">Cancel</button>
+        <button type="button" class="btn-publish" onclick="submitEventRegistration()">Confirm Registration</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/core/auth.js"></script>
+  <script src="../js/core/utils.js"></script>
+  <script src="../js/core/apiClient.js"></script>
+  <script src="../js/pages/events.js"></script>
+  <script src="../js/components/notifications.js"></script>
+
+
+
+
+<script src="../js/components/sidebar.js"></script>
+</body></html>

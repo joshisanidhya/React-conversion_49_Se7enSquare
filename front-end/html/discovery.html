@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Gameunity – Community Discovery</title>
+<meta name="description" content="Discover and join gaming communities on Gameunity — browse 50,000+ communities by topic, interest, and category.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+<link href="../css/global.css" rel="stylesheet">
+<link href="../css/components/sidebar.css" rel="stylesheet">
+<link href="../css/pages/discovery.css" rel="stylesheet">
+
+</head>
+<body>
+
+<!-- ─── APP SHELL ─── -->
+<div class="app-shell">
+  <div id="sidebar-container"></div>
+
+  <!-- ─── MAIN ─── -->
+  <div class="main">
+<header class="header">
+<div class="header-title">Discover Communities</div>
+    <div class="header-actions">
+      <div class="icon-btn">🔔<div class="notif-dot"></div></div>
+      <div class="header-avatar user-avatar" onclick="window.location.href='profile-settings.html'"></div>
+    </div>
+</header>
+<div class="content">
+<!-- Hero Search -->
+<div class="hero">
+<div class="hero-title">Find your next <span>community</span></div>
+<div class="hero-sub">Browse 50,000+ communities across every interest, topic, and niche.</div>
+<div class="search-bar">
+<span class="search-icon">🔍</span>
+<input id="searchInput" oninput="filterCards()" placeholder="Search by name, topic, or keyword…" type="text">
+<span class="search-kbd">⌘K</span>
+<button class="search-btn">Search</button>
+</div>
+<div class="hero-stats">
+<div class="h-stat">🏘️ <strong>50,214</strong>&nbsp;communities</div>
+<div class="h-stat">👥 <strong>1.2M</strong>&nbsp;members</div>
+<div class="h-stat">🟢 <strong>84,320</strong>&nbsp;online now</div>
+<div class="h-stat">📅 <strong>1,400+</strong>&nbsp;events this week</div>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="filter-bar" id="filterBar">
+<div class="chip active" data-cat="all" onclick="setChip(this,'all')"><span class="chip-icon">✦</span> All</div>
+      <div class="sort-container">
+        <div class="sort-btn" id="sortBtn" onclick="toggleSortDropdown()">⇅ Sort: Most Active</div>
+        <div class="sort-dropdown" id="sortDropdown">
+          <div class="sort-option" onclick="applySort('active', 'Most Active')">🔥 Most Active</div>
+          <div class="sort-option" onclick="applySort('members', 'Most Members')">👥 Most Members</div>
+          <div class="sort-option" onclick="applySort('trending', 'Trending')">📈 Trending</div>
+          <div class="sort-option" onclick="applySort('newest', 'Recently Created')">✨ Recently Created</div>
+        </div>
+      </div>
+    </div>
+    <!-- Body -->
+    <div class="body-area">
+      <!-- Featured Tournaments (organizer pay-to-promote — injected dynamically) -->
+      <div id="featuredEventsSection"></div>
+
+      <!-- Featured Section (Injected dynamically) -->
+      <div id="featuredSection"></div>
+
+      <!-- Grid -->
+      <div class="grid-header">
+        <div>
+          <span class="grid-title">All Communities</span>
+          <span class="grid-count" id="gridCount">Loading communities...</span>
+        </div>
+      </div>
+      <div class="comm-grid" id="commGrid">
+        <!-- Dynamic Cards Injected by discovery.js -->
+      </div>
+    </div>
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/apiClient.js"></script>
+<script src="../js/pages/discovery.js"></script>
+<script src="../js/components/notifications.js"></script>
+<script src="../js/components/sidebar.js"></script>
+
+
+
+</body></html>

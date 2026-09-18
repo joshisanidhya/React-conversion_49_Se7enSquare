@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Gameunity — Event Registrants</title>
+    <meta name="description" content="Gameunity — view everyone registered for one of your tournaments.">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+    <link href="../css/global.css" rel="stylesheet">
+    <link href="../css/components/sidebar.css" rel="stylesheet">
+    <link href="../css/pages/admin-dashboard.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-shell">
+      <div id="sidebar-container"></div>
+
+      <div class="main">
+        <header class="header">
+            <div class="header-left">
+                <div class="header-icon">👥</div>
+                <h1 class="header-title" id="pageTitle">Registrants</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn-ghost" onclick="window.location.href='organizer-dashboard.html'">← Back to Dashboard</button>
+                <div class="header-avatar user-avatar" onclick="window.location.href='profile-settings.html'"></div>
+            </div>
+        </header>
+
+        <div class="page active">
+            <p style="color:var(--text-3,#9ca3af);font-size:13px;margin-bottom:20px;" id="pageSub">Everyone registered for this tournament, with the details they gave at sign-up.</p>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>In-Game ID</th>
+                            <th>Registered At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registrants-tbody"></tbody>
+                </table>
+            </div>
+            <div class="table-footer"><span id="registrants-count">Loading…</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span id="toastIcon">✅</span>
+        <span id="toastMsg">Action applied</span>
+    </div>
+
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/apiClient.js"></script>
+    <script src="../js/pages/event-registrants.js"></script>
+    <script src="../js/components/sidebar.js"></script>
+</body></html>

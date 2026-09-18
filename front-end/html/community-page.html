@@ -1,0 +1,368 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="description" content="Gameunity Community Page — Join discussions, view members, and explore community events.">
+    <title>Gameunity – Community Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+    <link href="../css/global.css" rel="stylesheet">
+    <link href="../css/pages/community-page.css" rel="stylesheet">
+    
+  </head>
+
+  <body>
+    
+    
+    <!-- ─── MAIN ─── -->
+    <div class="main">
+      <!-- Header -->
+      <header class="header">
+        <button class="page-back-btn" onclick="goBackFromCommunity()" title="Back to communities">
+          &larr; Back
+        </button>
+        <div class="breadcrumb">
+          <button class="breadcrumb-link" onclick="window.location.href='discovery.html'">Discover</button>
+          <span class="sep">›</span>
+          <button class="breadcrumb-link" onclick="window.location.href='dashboard.html'">Dashboard</button>
+          <span class="sep">›</span>
+          <span class="current" id="breadcrumbCommunityName">Pro Gamers</span>
+        </div>
+        <div class="header-actions">
+          <div class="icon-btn">
+            🔔
+            <div class="notif-dot"></div>
+          </div>
+          <div class="header-avatar user-avatar" onclick="window.location.href='profile-settings.html'"></div>
+        </div>
+      </header>
+      <!-- Banner -->
+      <div class="comm-banner-area">
+        <div class="comm-banner">
+          <div class="banner-pattern"></div>
+          <div class="banner-emoji" id="comm-icon">⚡</div>
+        </div>
+        <div class="comm-profile-row">
+          <div class="comm-big-icon">⚡</div>
+          <div class="comm-title-block">
+            <div class="comm-title-row">
+              <h1 class="comm-big-name" id="comm-name-title">Pro Gamers</h1>
+              <div class="verified-badge">✓ Verified</div>
+            </div>
+            <div class="comm-meta-row">
+              <div class="meta-chip">
+                <span class="online-dot"></span> <span id="comm-online-count">312</span> online
+              </div>
+              <div class="meta-chip">👥 <span id="comm-member-count">2,451</span> members</div>
+              <div class="meta-chip" id="comm-category">💻 Esports · Competitive</div>
+              <div class="meta-chip" id="comm-founded">📅 Founded Mar 2022</div>
+            </div>
+          </div>
+          <div class="comm-actions">
+            <button class="btn-joined-main" id="joinMainBtn" onclick="toggleMainJoin()">
+              ✓ Joined
+            </button>
+            <a href="community-settings.html" class="rbac-manage-btn hidden" id="rbacManageBtn" title="Open community settings">⚙️ Community Settings</a>
+            <button class="hidden" id="rbacDeleteBtn" onclick="requestDeleteCommunity()" style="
+                background: rgba(255, 68, 68, 0.1);
+                color: var(--danger);
+                border: 1px solid rgba(255, 68, 68, 0.2);
+                border-radius: 8px;
+                padding: 0 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              ">
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('overview', this)">
+          📋 Overview
+        </button>
+        <button class="tab-btn" onclick="switchTab('channels', this)">
+          📡 Channels <span class="tab-count" id="tab-count-channels">14</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('members', this)">
+          👥 Members <span class="tab-count" id="tab-count-members">2,451</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('rules', this)">
+          📜 Rules <span class="tab-count">7</span>
+        </button>
+      </div>
+      <!-- ── OVERVIEW TAB ── -->
+      <div class="tab-content active" id="tab-overview">
+        <div class="overview-left">
+          <!-- Pinned Announcement -->
+          <div class="pinned-card">
+            <div class="pin-header">📌 Pinned Announcement</div>
+            <div class="pin-text">
+              Welcome to Pro Gamers! 🎉 Our monthly hackathon is back —
+              <strong>March Hack Sprint</strong> starts on March 7th. Register
+              in #events before March 6th. Prizes worth $2,000 up for grabs. All
+              skill levels welcome!
+            </div>
+            <div class="pin-footer">
+              <div class="pin-author">
+                <div class="pin-av user-avatar"></div>
+                <span>Rahul Kumar (Owner) · 2 days ago</span>
+              </div>
+            </div>
+          </div>
+          <!-- About -->
+          <div class="section-card">
+            <div class="sc-title">
+              <span class="sc-title-icon">ℹ</span> About <span class="comm-name-text">Pro Gamers</span>
+            </div>
+            <div class="about-text" id="comm-description">
+              Pro Gamers is a thriving community for developers of all levels —
+              from curious beginners to seasoned engineers. We share projects,
+              debug together, discuss the latest frameworks, and support each
+              other in growing our careers. Whether you're into frontend,
+              Strategy, Streaming, or mobile, there's a home for you here.
+            </div>
+            <div class="tag-row">
+              <span class="tag">MOBA</span>
+              <span class="tag">RPG</span>
+              <span class="tag">FPS</span>
+              <span class="tag">Streaming</span>
+              <span class="tag">Open Source</span>
+              <span class="tag">Career</span>
+              <span class="tag">Hackathons</span>
+            </div>
+          </div>
+          <!-- Stats -->
+          <div class="section-card">
+            <div class="sc-title">
+              <span class="sc-title-icon">📊</span> Community Stats
+            </div>
+            <div class="stat-grid">
+              <div class="stat-box">
+                <div class="stat-val" id="stat-total-members">2,451</div>
+                <div class="stat-lbl">Total Members</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val stat-online" id="stat-online-now">312</div>
+                <div class="stat-lbl">Online Now</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val">14</div>
+                <div class="stat-lbl">Channels</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val">48k+</div>
+                <div class="stat-lbl">Messages Sent</div>
+              </div>
+            </div>
+          </div>
+          <!-- Recent Messages -->
+          <div class="section-card">
+            <div class="sc-title">
+              <span class="sc-title-icon">💬</span> Recent Messages
+            </div>
+            <div class="messages-feed">
+              <div class="msg-group">
+                <div class="msg-av grad-violet">AM</div>
+                <div class="msg-body">
+                  <div class="msg-header">
+                    <span class="msg-uname">Alex Morgan</span>
+                    <span class="msg-time">10:41 AM</span>
+                  </div>
+                  <div class="msg-text">
+                    This looks incredible
+                    <span class="mention">@Arjun Kumar</span>! Love the color
+                    scheme. Are you using
+                    <strong>Gameunity's design system</strong> or building from
+                    scratch?
+                  </div>
+                </div>
+                <div class="msg-actions">
+                  <button class="act-btn reaction-btn" onclick="toggleReaction(this, '😊')">
+                    😊
+                  </button>
+                  <button class="act-btn reply-btn" onclick="replyToMessage(this)">
+                    ↩
+                  </button>
+                  <button class="act-btn more-btn" onclick="showMessageMenu(this)">
+                    ⋯
+                  </button>
+                </div>
+              </div>
+              <div class="msg-group">
+                <div class="msg-av grad-pink">MP</div>
+                <div class="msg-body">
+                  <div class="msg-text">
+                    Sharing our team's early UI mockup for the hackathon 👀
+                    Still very rough but excited about the direction!
+                  </div>
+                  <div class="reactions">
+                    <div class="FPS-pill" onclick="toggleFPS(this)">
+                      <span>🔥</span><span class="FPS-count">22</span>
+                    </div>
+                    <div class="FPS-pill" onclick="toggleFPS(this)">
+                      <span>😍</span><span class="FPS-count">8</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="msg-actions">
+                  <button class="act-btn reaction-btn" onclick="toggleReaction(this, '😊')">
+                    😊
+                  </button>
+                  <button class="act-btn reply-btn" onclick="replyToMessage(this)">
+                    ↩
+                  </button>
+                  <button class="act-btn more-btn" onclick="showMessageMenu(this)">
+                    ⋯
+                  </button>
+                </div>
+              </div>
+              <div class="msg-group">
+                <div class="msg-av grad-purple user-avatar"></div>
+                <div class="msg-body">
+                  <div class="msg-header">
+                    <span class="msg-uname">Rahul Kumar</span>
+                    <span class="msg-role role-moderator-badge">Moderator</span>
+                    <span class="msg-time">10:08 AM</span>
+                  </div>
+                  <div class="msg-text">
+                    Also dropping this here for anyone getting started with our
+                    new <code>nexus-cli</code> tool. Here's the setup snippet:
+                  </div>
+                  <div class="code-block">
+                    <div class="code-block-header">
+                      <span class="code-lang">bash</span>
+                      <button class="code-copy" onclick="
+                          this.textContent = 'Copied!';
+                          setTimeout(() => (this.textContent = 'Copy'), 1500);
+                        ">
+                        Copy
+                      </button>
+                    </div>
+                    <pre><span class="cm"># Install globally</span>
+<span class="fn">npm</span> install -g nexus-cli
+
+<span class="cm"># Login with your Gameunity token</span>
+<span class="fn">nexus</span> login --token <span class="str">YOUR_TOKEN_HERE</span>
+
+<span class="cm"># Bootstrap a new project</span>
+<span class="fn">nexus</span> init my-project --template <span class="str">FPS-ts</span></pre>
+                  </div>
+                </div>
+                <div class="msg-actions">
+                  <button class="act-btn reaction-btn" onclick="toggleReaction(this, '😊')">
+                    😊
+                  </button>
+                  <button class="act-btn reply-btn" onclick="replyToMessage(this)">
+                    ↩
+                  </button>
+                  <button class="act-btn more-btn" onclick="showMessageMenu(this)">
+                    ⋯
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="view-more-messages">
+              <a href="community-page.html" class="view-more-btn">View Community Posts →</a>
+            </div>
+          </div>
+        </div>
+        <div class="overview-right">
+          <!-- Upcoming Events -->
+          <div class="section-card">
+            <div class="sc-title">
+              <span class="sc-title-icon">📅</span> Active Events
+            </div>
+            <div id="activeEventsList"></div>
+          </div>
+          <!-- Created by -->
+          <div class="section-card">
+            <div class="sc-title">
+              <span class="sc-title-icon">👤</span> Created By
+            </div>
+            <div class="created-by-card">
+              <div class="created-by-avatar grad-orange user-avatar"></div>
+              <div>
+                <div class="created-by-name">Rahul Kumar</div>
+                <div class="created-by-meta">Owner · Since Mar 2022</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ── CHANNELS TAB ── -->
+      <div class="tab-content" id="tab-channels">
+        <div class="channels-layout">
+          <div class="channels-main" id="channelsList"></div>
+          
+        </div>
+      </div>
+      <!-- ── MEMBERS TAB ── -->
+      <div class="tab-content" id="tab-members">
+        <div class="members-layout">
+          <div class="members-search">
+            <span class="members-search-icon">🔍</span>
+            <input oninput="filterMembers(this.value)" placeholder="Search members…" type="text">
+          </div>
+          <div class="members-groups" id="membersContainer">
+            <div class="empty-state" style="padding:20px;color:var(--text-muted);font-size:13px;">Loading members…</div>
+          </div>
+        </div>
+      </div>
+      <!-- ── RULES TAB ── -->
+      <div class="tab-content" id="tab-rules">
+        <div class="rules-layout">
+          <div class="rules-main" id="rulesMain">
+            <!-- Rendered dynamically by community-page.js's renderRules() — real rules the owner set via
+                 community-settings.html, or generic defaults when none are set -->
+          </div>
+          <div class="rules-aside">
+            <div class="rules-note">
+              <div class="rules-note-title">✓ Safe Community</div>
+              <div class="rules-note-text">
+                Pro Gamers has zero tolerance for hate speech, harassment, or
+                discrimination. Violations result in immediate action.
+              </div>
+            </div>
+            <div class="section-card">
+              <div class="sc-title">⚖️ Enforcement</div>
+              <div class="enforcement-list">
+                <div class="enforcement-item">
+                  <span class="enforcement-icon">⚠️</span> 1st offense: Warning
+                </div>
+                <div class="enforcement-item">
+                  <span class="enforcement-icon">🔇</span> 2nd offense: 24h mute
+                </div>
+                <div class="enforcement-item">
+                  <span class="enforcement-icon">🚫</span> 3rd offense: Temp ban
+                </div>
+                <div class="enforcement-item enforcement-item--severe">
+                  <span class="enforcement-icon">⛔</span> Severe: Permanent ban
+                </div>
+              </div>
+            </div>
+            <div class="section-card">
+              <div class="sc-title">📬 Report a Problem</div>
+              <div class="report-text">
+                Use the report button on any message or contact a moderator
+                directly.
+              </div>
+              <button class="report-btn" onclick="reportThisCommunity()">
+                🚩 Report an Issue
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/utils.js"></script>
+    <script src="../js/core/apiClient.js"></script>
+    <script src="../js/pages/community-page.js"></script>
+    <script src="../js/components/notifications.js"></script>
+  
+
+
+</body></html>

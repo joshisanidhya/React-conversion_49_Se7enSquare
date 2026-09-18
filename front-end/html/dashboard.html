@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gameunity – Home Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+<meta name="description" content="Gameunity Home Dashboard — Browse joined communities, upcoming events, and notifications.">
+
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/components/sidebar.css">
+<link rel="stylesheet" href="../css/pages/dashboard.css">
+
+</head>
+<body>
+
+<!-- ─── APP SHELL ─── -->
+<div class="app-shell">
+  <div id="sidebar-container"></div>
+
+  <!-- ─── MAIN ─── -->
+  <div class="main">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-title">Home</div>
+    <div class="header-search" style="position:relative;">
+      <span>🔍</span>
+      <input type="text" id="dashSearchInput" placeholder="Search communities, people, events…" oninput="handleDashboardSearch(this.value)" onfocus="handleDashboardSearch(this.value)">
+      <div id="dashSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:6px;background:var(--bg-card,#151d2f);border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,0.35);max-height:360px;overflow-y:auto;z-index:50;"></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" style="padding: 8px 16px; font-size: 13px; border-radius: 8px; margin-right: 12px;" onclick="window.location.href='create-community.html'">
+        + Create Community
+      </button>
+      <div class="icon-btn" id="headerNotif" data-tooltip="Notifications">
+        🔔<div class="notif-dot"></div>
+      </div>
+      <div class="header-avatar user-avatar" id="headerProfile" data-tooltip="Profile"></div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Greeting Banner -->
+    <div class="greeting">
+      <div class="greeting-text">
+        <div class="greeting-name">Good afternoon, <span class="user-name"></span> 👋</div>
+        <div class="greeting-sub">You have 2 unread messages and 2 upcoming events today.</div>
+      </div>
+      <div class="greeting-stats">
+        <div class="g-stat"><div class="g-stat-val">2</div><div class="g-stat-label">Communities</div></div>
+        <div class="g-stat"><div class="g-stat-val">2</div><div class="g-stat-label">Messages</div></div>
+        <div class="g-stat"><div class="g-stat-val">2</div><div class="g-stat-label">Events</div></div>
+      </div>
+    </div>
+
+    <!-- Joined Communities -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">Joined Communities</div>
+        <div class="section-link" onclick="window.location.href='discovery.html'">View all →</div>
+      </div>
+          <div class="communities-scroll">
+            <!-- Dynamic Community Cards Injected by dashboard.js -->
+          </div>
+    </div>
+
+
+
+    <!-- Two Column: Notifications + Events -->
+    <div class="two-col">
+
+      <!-- Notifications -->
+      <div class="section-box">
+        <div class="section-header">
+          <div class="section-title">🔔 Recent Notifications</div>
+          <div class="section-link" onclick="markAllRead()">Mark all read</div>
+        </div>
+        <div class="notif-list" id="notif-list-container">
+          <!-- Dynamic notifications injected by dashboard.js -->
+        </div>
+      </div>
+
+      <!-- Upcoming Events -->
+      <div>
+        <div class="section-header">
+          <div class="section-title">📅 Upcoming Events</div>
+          <div class="section-link" onclick="window.location.href='events.html'">View all →</div>
+        </div>
+          <div class="event-list">
+            <!-- Dynamic Events Injected by dashboard.js -->
+          </div>
+      </div>
+
+    </div>
+  </div>
+  </div>
+</div><!-- /.app-shell -->
+
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/apiClient.js"></script>
+<script src="../js/pages/dashboard.js"></script>
+<script src="../js/components/notifications.js"></script>
+<script>if(!localStorage.getItem("currentUser")){persistCurrentUser({firstName:"Rajat",lastName:"Jain",username:"rajatjain",role:"admin",avatar:null,loginTime:new Date().toISOString()});}</script>
+<script src="../js/components/sidebar.js"></script>
+
+</body></html>

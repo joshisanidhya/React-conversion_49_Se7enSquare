@@ -1,0 +1,128 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Gameunity — Organizer Dashboard</title>
+    <meta name="description" content="Gameunity Organizer Dashboard — host and manage your tournaments, track registrations, and view registrant details.">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+    <link href="../css/global.css" rel="stylesheet">
+    <link href="../css/components/sidebar.css" rel="stylesheet">
+    <link href="../css/pages/admin-dashboard.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-shell">
+      <div id="sidebar-container"></div>
+
+      <div class="main">
+        <header class="header">
+            <div class="header-left">
+                <div class="header-icon">🏆</div>
+                <h1 class="header-title">Organizer Dashboard</h1>
+                <span class="header-badge">ORGANIZER</span>
+            </div>
+            <div class="header-right">
+                <div class="header-avatar user-avatar" onclick="window.location.href='profile-settings.html'"></div>
+            </div>
+        </header>
+
+        <div class="page active">
+            <p style="color:var(--text-3,#9ca3af);font-size:13px;margin-bottom:20px;">Create and manage the tournaments you host. Community-wide event approval stays with Community Managers/Admins — this view is scoped to tournaments you created.</p>
+
+            <div class="card" id="org-plan-card" style="margin-bottom:20px;"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-purple">🏆</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="org-total">—</div>
+                        <div class="stat-label">My Tournaments</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">👥</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="org-regs">—</div>
+                        <div class="stat-label">Total Registrations</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-orange">⏳</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="org-pending">—</div>
+                        <div class="stat-label">Pending Approval</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-cyan">📅</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="org-upcoming">—</div>
+                        <div class="stat-label">Upcoming (Approved)</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">💰</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="org-earnings">—</div>
+                        <div class="stat-label">Est. Earnings (15%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-toolbar">
+                <div class="filter-bar">
+                    <button class="filter-btn on" onclick="filterOrgEvents('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterOrgEvents('approved', this)">Approved</button>
+                    <button class="filter-btn" onclick="filterOrgEvents('pending', this)">Pending</button>
+                    <button class="filter-btn" onclick="filterOrgEvents('cancelled', this)">Cancelled</button>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn-primary" onclick="openCreateModal()">+ Host Tournament</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tournament</th>
+                            <th>Community</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Registrations</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="org-events-tbody"></tbody>
+                </table>
+            </div>
+            <div class="table-footer"><span id="org-events-count">Showing 0 tournaments</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MODAL ═══ -->
+    <div class="modal-overlay" id="modal" style="display:none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-title">Host a Tournament</h3>
+                <button class="modal-x" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" id="modal-confirm" onclick="confirmModal()">Create Tournament</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✅</span>
+        <span id="toastMsg">Action applied</span>
+    </div>
+
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/apiClient.js"></script>
+    <script src="../js/pages/organizer-dashboard.js"></script>
+    <script src="../js/components/sidebar.js"></script>
+</body></html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Gameunity — Owner Statistics</title>
+    <meta name="description" content="Gameunity Owner view — read-only platform statistics and health, nothing else.">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+    <link href="../css/global.css" rel="stylesheet">
+    <link href="../css/components/sidebar.css" rel="stylesheet">
+    <link href="../css/pages/admin-dashboard.css" rel="stylesheet">
+    <style>.drill-card{cursor:pointer;transition:transform 0.15s,border-color 0.15s}.drill-card:hover{transform:translateY(-2px);border-color:rgba(91,110,245,0.35)}</style>
+</head>
+<body>
+
+    <div class="app-shell">
+      <div id="sidebar-container"></div>
+
+      <div class="main">
+        <header class="header">
+            <div class="header-left">
+                <div class="header-icon">📊</div>
+                <h1 class="header-title">Platform Statistics</h1>
+                <span class="header-badge">OWNER</span>
+            </div>
+            <div class="header-right">
+                <div class="header-avatar user-avatar" onclick="window.location.href='profile-settings.html'"></div>
+            </div>
+        </header>
+
+        <div class="page active">
+            <p style="color:var(--text-3,#9ca3af);font-size:13px;margin-bottom:20px;">Read-only view — statistics and platform health. No user, community, or moderation actions are available from this account.</p>
+            <p style="color:var(--text-3,#666);font-size:11.5px;margin:-12px 0 14px;">💡 Click any card for a breakdown.</p>
+            <div class="stats-grid">
+                <div class="stat-card drill-card" onclick="openDrill('communities')">
+                    <div class="stat-icon bg-cyan">🏘️</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-comms">—</div>
+                        <div class="stat-label">Communities</div>
+                    </div>
+                </div>
+                <div class="stat-card drill-card" onclick="openDrill('events')">
+                    <div class="stat-icon bg-green">📅</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-events">—</div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-header" style="margin-bottom:14px;"><h3>Revenue Overview</h3></div>
+            <div class="stats-grid">
+                <div class="stat-card drill-card" onclick="openDrill('revenue')">
+                    <div class="stat-icon bg-green">💰</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-rev-total">—</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                </div>
+                <div class="stat-card drill-card" onclick="openDrill('revenue')">
+                    <div class="stat-icon bg-purple">📈</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-rev-monthly">—</div>
+                        <div class="stat-label">Monthly Revenue</div>
+                    </div>
+                </div>
+                <div class="stat-card drill-card" onclick="openDrill('subscriptions')">
+                    <div class="stat-icon bg-cyan">💎</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-rev-subs">—</div>
+                        <div class="stat-label">Subscription Revenue</div>
+                    </div>
+                </div>
+                <div class="stat-card drill-card" onclick="openDrill('revenue')">
+                    <div class="stat-icon bg-orange">🏆</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-rev-organiser">—</div>
+                        <div class="stat-label">Organizer Revenue</div>
+                    </div>
+                </div>
+                <div class="stat-card drill-card" onclick="openDrill('revenue')">
+                    <div class="stat-icon bg-green">📣</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-rev-featured">—</div>
+                        <div class="stat-label">Featured Event Revenue</div>
+                    </div>
+                </div>
+                <div class="stat-card drill-card" onclick="openDrill('subscriptions')">
+                    <div class="stat-icon bg-purple">👑</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-rev-premium-users">—</div>
+                        <div class="stat-label">Active Premium Users</div>
+                    </div>
+                </div>
+                <div class="stat-card drill-card" onclick="openDrill('organisers', 'verified')">
+                    <div class="stat-icon bg-cyan">✅</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-rev-verified-organisers">—</div>
+                        <div class="stat-label">Verified Organizers</div>
+                    </div>
+                </div>
+                <div class="stat-card drill-card" onclick="openDrill('organisers', 'pending')">
+                    <div class="stat-icon bg-orange">⏳</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="ow-rev-pending-organisers">—</div>
+                        <div class="stat-label">Pending Organizer Applications</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Platform Health</h3>
+                    </div>
+                    <div class="health-grid">
+                        <div class="health-item"><span class="h-dot green"></span> Backend <span class="h-val" id="ow-health-backend">Checking…</span></div>
+                        <div class="health-item"><span class="h-dot green"></span> Open Reports <span class="h-val" id="ow-health-reports">—</span></div>
+                        <div class="health-item"><span class="h-dot green"></span> Pending Events <span class="h-val" id="ow-health-events">—</span></div>
+                        <div class="health-item"><span class="h-dot green"></span> Pending Appeals <span class="h-val" id="ow-health-appeals">—</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DRILL-DOWN MODAL ═══ -->
+    <div class="modal-overlay" id="drillModal" style="display:none;">
+        <div class="modal-container" style="width:640px;max-width:92vw;">
+            <div class="modal-header">
+                <h3 id="drill-title">Details</h3>
+                <button class="modal-x" onclick="closeDrill()">×</button>
+            </div>
+            <div class="modal-body" id="drill-body" style="max-height:60vh;overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/apiClient.js"></script>
+    <script src="../js/pages/owner-dashboard.js"></script>
+    <script src="../js/components/sidebar.js"></script>
+</body></html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Gameunity — System Admin Dashboard</title>
+    <meta name="description" content="Gameunity System Admin Control Panel — Full system-level access to manage users, communities, moderation, and platform configuration.">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap" rel="stylesheet">
+    <link href="../css/global.css" rel="stylesheet">
+    <link href="../css/components/sidebar.css" rel="stylesheet">
+    <link href="../css/pages/admin-dashboard.css" rel="stylesheet">
+    
+</head>
+<body>
+    
+
+
+    
+    <div class="su-nav-backdrop" id="suNavBackdrop" aria-hidden="true"></div>
+    
+
+    <!-- ─── APP SHELL ─── -->
+    <div class="app-shell">
+      <div id="sidebar-container"></div>
+
+      <!-- ═══ MAIN ═══ -->
+      <div class="main">
+        <header class="header">
+            <div class="header-left">
+                <div class="header-icon" id="page-icon">⚡</div>
+                <h1 class="header-title" id="page-title">System Overview</h1>
+                <span class="header-badge">ADMIN</span>
+            </div>
+            <div class="header-right">
+
+                <div class="search-box">
+                    <input type="text" placeholder="Search anything..." id="globalSearch" oninput="handleGlobalSearch(this.value)">
+                </div>
+                <div class="header-avatar user-avatar" id="su-avatar" onclick="window.location.href='profile-settings.html'"></div>
+            </div>
+        </header>
+
+        <!-- ═══ OVERVIEW PAGE ═══ -->
+        <div class="page active" id="page-overview">
+            <div class="stats-grid">
+                <div class="stat-card" onclick="navTo('users')" style="cursor: pointer;" title="Go to User Management">
+                    <div class="stat-icon bg-purple">👤</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="sv-users">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-trend up">↑ 12.4%</div>
+                </div>
+                <div class="stat-card" onclick="navTo('communities')" style="cursor: pointer;" title="Go to Communities">
+                    <div class="stat-icon bg-cyan">🏘️</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="sv-comms">0</div>
+                        <div class="stat-label">Communities</div>
+                    </div>
+                    <div class="stat-trend up">↑ 8.2%</div>
+                </div>
+                <div class="stat-card" onclick="navTo('moderation')" style="cursor: pointer;" title="Go to Moderation">
+                    <div class="stat-icon bg-orange">🚩</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="sv-reports">0</div>
+                        <div class="stat-label">Open Reports</div>
+                    </div>
+                    <div class="stat-trend down">↓ 3.1%</div>
+                </div>
+                <div class="stat-card" onclick="navTo('events-mgmt')" style="cursor: pointer;" title="Go to Events Management">
+                    <div class="stat-icon bg-green">📅</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="sv-events">0</div>
+                        <div class="stat-label">Active Events</div>
+                    </div>
+                    <div class="stat-trend up">↑ 15.7%</div>
+                </div>
+                <div class="stat-card" onclick="navTo('appeals')" style="cursor: pointer;" title="Go to Appeals">
+                    <div class="stat-icon bg-purple">⚖️</div>
+                    <div class="stat-data">
+                        <div class="stat-value" id="sv-appeals">0</div>
+                        <div class="stat-label">Open Appeals</div>
+                    </div>
+                    <div class="stat-trend up">—</div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="section-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Audit Log</h3>
+                        <button class="btn-sm" onclick="navTo('audit', document.querySelector('[onclick*=\'audit\']'))">View All</button>
+                    </div>
+                    <div class="audit-list" id="recent-audit"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Platform Health</h3>
+                    </div>
+                    <div class="health-grid">
+                        <div class="health-item"><span class="h-dot green"></span> AutoMod <span class="h-val" id="automod-accuracy">97.3%</span></div>
+                        <div class="health-item"><span class="h-dot green"></span> Uptime <span class="h-val">99.97%</span></div>
+                        <div class="health-item"><span class="h-dot yellow"></span> Open Reports <span class="h-val" id="health-reports">5</span></div>
+                        <div class="health-item"><span class="h-dot green"></span> API Latency <span class="h-val">42ms</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ USER MANAGEMENT PAGE ═══ -->
+        <div class="page" id="page-users">
+            <div class="page-toolbar">
+                <div class="filter-bar">
+                    <button class="filter-btn on" onclick="filterUsers('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterUsers('active', this)">Active</button>
+                    <button class="filter-btn" onclick="filterUsers('banned', this)">Banned</button>
+                    <button class="filter-btn" onclick="filterUsers('warned', this)">Warned</button>
+                </div>
+                <div class="toolbar-right">
+                    <input type="text" class="search-input" placeholder="Search users..." oninput="searchUsers(this.value)">
+                    <button class="btn-primary" onclick="openAddUserModal()">+ Add User</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table" id="users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="users-count">Showing 0 users</span>
+            </div>
+        </div>
+
+        <!-- ═══ COMMUNITIES PAGE ═══ -->
+        <div class="page" id="page-communities">
+            <div class="page-toolbar">
+                <div class="filter-bar">
+                    <button class="filter-btn on" onclick="filterComms('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterComms('Gaming', this)">Gaming</button>
+                    <button class="filter-btn" onclick="filterComms('Design', this)">Design</button>
+                    <button class="filter-btn" onclick="filterComms('Education', this)">Education</button>
+                </div>
+                <div class="toolbar-right">
+                    <input type="text" class="search-input" placeholder="Search communities..." oninput="searchComms(this.value)">
+
+                </div>
+            </div>
+            <div class="comm-grid" id="comm-grid"></div>
+        </div>
+
+        <!-- ═══ MODERATION PAGE ═══ -->
+        <div class="page" id="page-moderation">
+            <div class="page-toolbar">
+                <div class="filter-bar">
+                    <button class="filter-btn on" onclick="filterReports('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterReports('pending', this)">Pending</button>
+                    <button class="filter-btn" onclick="filterReports('escalated', this)">Escalated</button>
+                    <button class="filter-btn" onclick="filterReports('review', this)">In Review</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>User</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ APPEALS PAGE ═══ -->
+        <div class="page" id="page-appeals">
+            <div class="page-toolbar">
+                <div class="filter-bar">
+                    <button class="filter-btn on" onclick="filterAppeals('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterAppeals('pending', this)">Pending</button>
+                    <button class="filter-btn" onclick="filterAppeals('approved', this)">Approved</button>
+                    <button class="filter-btn" onclick="filterAppeals('rejected', this)">Rejected</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Appeal ID</th>
+                            <th>Submitted By</th>
+                            <th>Reason</th>
+                            <th>Requested Resolution</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appeals-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ EVENTS PAGE ═══ -->
+        <div class="page" id="page-events-mgmt">
+            <div class="page-toolbar">
+                <div class="toolbar-right" style="margin-left:auto;">
+
+                </div>
+            </div>
+            <div class="events-grid" id="events-grid"></div>
+        </div>
+
+        <!-- ═══ APPLICATIONS PAGE (Verified Organizer / Certified Moderator approval queues) ═══ -->
+        <div class="page" id="page-applications">
+            <div class="card" style="margin-bottom:20px;">
+                <div class="card-header"><h3>🏆 Organizer Applications</h3></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>User</th><th>Experience Note</th><th>Applied</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="organiser-apps-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>🛡️ Moderator Applications</h3></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>User</th><th>Quiz Score</th><th>Applied</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="moderator-apps-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ AUDIT LOG PAGE ═══ -->
+        <div class="page" id="page-audit">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Target</th>
+                            <th>By</th>
+                            <th>Reason</th>
+                            <th>Community</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══ CONFIG PAGE ═══ -->
+        <div class="page" id="page-config">
+            <div class="config-grid">
+                <div class="card">
+                    <div class="card-header"><h3>AutoMod Settings</h3></div>
+                    <div class="config-item">
+                        <label>AutoMod Enabled</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="cfg-automod" checked="" onchange="updateConfig('autoModEnabled', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>Public Registration</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="cfg-registration" checked="" onchange="updateConfig('allowPublicRegistration', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>Max Communities / User</label>
+                        <input type="number" class="config-input" id="cfg-maxcomm" value="10" onchange="updateConfig('maxCommunitiesPerUser', parseInt(this.value))">
+                    </div>
+                    <div class="config-item">
+                        <label>Max Channels / Community</label>
+                        <input type="number" class="config-input" id="cfg-maxch" value="50" onchange="updateConfig('maxChannelsPerCommunity', parseInt(this.value))">
+                    </div>
+                    <p style="font-size:12px;color:var(--text-3,#9ca3af);margin-top:8px;">Each field above saves immediately when changed — there's nothing else to save.</p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Moderation Policies</h3></div>
+                    <div id="policies-list"></div>
+                    <div class="add-policy-row">
+                        <input type="text" class="config-input" id="new-policy" placeholder="Add new policy...">
+                        <button class="btn-sm" onclick="addPolicy()">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ MODAL ═══ -->
+    <div class="modal-overlay" id="modal" style="display:none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal</h3>
+                <button class="modal-x" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" id="modal-confirm" onclick="confirmModal()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✅</span>
+        <span id="toastMsg">Action applied</span>
+    </div>
+
+    <script src="../js/core/auth.js"></script>
+    
+    
+    <script src="../js/core/apiClient.js"></script>
+    <script src="../js/pages/admin-dashboard.js"></script>
+<script src="../js/components/notifications.js"></script>
+
+
+<script src="../js/components/sidebar.js"></script>
+</body></html>

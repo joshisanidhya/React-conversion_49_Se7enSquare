@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gameunity — Chat</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/pages/chat.css" />
+  <style>
+    /* Ensure full height layout */
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .chat-area {
+      height: 100% !important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Standard Platform Header -->
+  <header class="header">
+    <div class="header-left" style="display:flex;align-items:center;gap:12px;">
+      <button onclick="const cId = new URLSearchParams(window.location.search).get('community'); window.location.href = cId ? 'community-page.html?id='+cId : 'dashboard.html'"
+        style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:var(--text-secondary,#aaa);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.2s;"
+        onmouseover="this.style.background='rgba(255,255,255,0.13)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.07)'" title="Go back">
+        ← Back
+      </button>
+      <div class="header-title" onclick="window.location.href='dashboard.html'" style="cursor:pointer">Gameunity</div>
+    </div>
+    <div class="header-actions">
+      <div id="searchToggleBtn" class="hact-btn" onclick="toggleSearchBar()" title="Search Messages">🔍</div>
+      <div id="pinnedToggleBtn" class="hact-btn" onclick="togglePinnedPanel()" title="Pinned Messages">📌</div>
+      <div id="memberCountChip" class="member-count-chip" onclick="toggleMemberSidebar()" title="Members List">
+        👥 <span id="onlineCount">—</span>
+      </div>
+      <div class="header-divider" style="width:1px; height:24px; background:var(--border); margin:0 8px;"></div>
+      <div class="icon-btn" onclick="window.location.href='profile-settings.html'">
+        <div class="header-avatar user-avatar"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="chat-layout">
+    <!-- ─── LEFT: CHANNEL SIDEBAR ─── -->
+    <nav class="ch-sidebar">
+      <div class="comm-header">
+        <div class="comm-header-top">
+          <div class="comm-icon-sm" id="chatCommIcon">🎮</div>
+          <div class="comm-hname" id="chatCommName">Community</div>
+        </div>
+        <div class="comm-hmeta">Online</div>
+      </div>
+
+      <div class="ch-search">
+        <input type="text" placeholder="Search channels…" oninput="filterChannels(this.value)" />
+      </div>
+
+      <div class="ch-list" id="channelsList">
+        <!-- Channels will be populated dynamically from the community's channel list via API -->
+      </div>
+
+      <div class="ch-footer">
+        <div class="user-av grad-purple user-avatar"></div>
+        <div class="user-av-name">You</div>
+        <div class="mic-btn" id="muteMicBtn" title="Mute Mic" onclick="toggleMute(this)">🎤</div>
+        <div class="mic-btn" id="deafenBtn" title="Deafen" onclick="toggleDeafen(this)">🎧</div>
+      </div>
+    </nav>
+
+    <!-- ─── CENTER: CHAT AREA ─── -->
+    <main class="chat-area">
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="ch-name-display">
+          <span class="ch-hash" id="activeChanHash">#</span>
+          <span class="ch-name-text" id="activeChanName">general</span>
+          <span class="ch-topic" id="activeChanTopic">The main hub — say hello, share updates, ask anything 👋</span>
+        </div>
+      </div>
+
+      <!-- Search Bar (Hidden by default) -->
+      <div id="chatSearchBar" class="chat-search-bar">
+        <div class="chat-search-inner">
+          <span class="chat-search-icon">🔍</span>
+          <input type="text" id="chatSearchInput" placeholder="Search messages..."
+            oninput="searchMessages(this.value)" />
+          <span id="chatSearchCount" class="chat-search-count"></span>
+          <button class="chat-search-close" onclick="toggleSearchBar()">✕</button>
+        </div>
+      </div>
+
+      <!-- Messages Scroller -->
+      <div class="messages-wrap" id="messagesWrap">
+        <div class="chat-empty-state" id="chatEmptyState" style="display: none;">
+          <div class="empty-icon">👋</div>
+          <div class="empty-text">Start the conversation</div>
+        </div>
+      </div>
+
+      <!-- Reply Bar (Hidden by default) -->
+      <div id="replyBar" class="reply-bar" style="display: none;">
+        <div class="reply-bar-inner">
+          <span class="reply-bar-icon">↩️</span>
+          <span class="reply-bar-text">Replying to <strong id="replyBarName">User</strong></span>
+          <button class="reply-bar-close" onclick="cancelReply()">✕</button>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <div class="input-wrap">
+          <div class="input-toolbar">
+            <div class="tb-btn" title="Bold" onclick="formatText('bold')"><strong>B</strong></div>
+            <div class="tb-btn" title="Italic" onclick="formatText('italic')"><em>I</em></div>
+            <div class="tb-btn" title="Code" onclick="formatText('code')"><span class="tb-mono">&lt;/&gt;</span></div>
+            <div class="tb-divider"></div>
+            <div class="tb-btn" title="Emoji" onclick="openToolbarEmoji()">😊</div>
+            <div class="tb-btn" title="Mention" onclick="insertMention()">@</div>
+          </div>
+          <div class="input-row">
+            <button type="button" class="tb-btn" title="Attach File" onclick="triggerFileAttach()">➕</button>
+            <textarea id="msgInput" placeholder="Message #general" rows="1"
+              onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendMessage(); }"></textarea>
+            <button type="button" class="send-btn" onclick="sendMessage()">🚀</button>
+          </div>
+        </div>
+        <input type="file" id="fileInput" style="display:none" onchange="handleFileAttach(this)" />
+      </div>
+
+      <!-- Pinned Panel (Absolute) -->
+      <div id="pinnedPanel" class="pinned-panel">
+        <div class="pinned-panel-header">
+          <span>📌 Pinned Messages</span>
+          <button class="pinned-panel-close" onclick="togglePinnedPanel()">✕</button>
+        </div>
+        <div class="pinned-panel-list" id="pinnedList">
+          <div id="pinnedEmpty" class="pinned-empty">No pinned messages yet.</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ─── RIGHT: MEMBER SIDEBAR ─── -->
+    <aside class="mem-sidebar" id="memberSidebar">
+      <div class="mem-header">
+        <div class="mem-title">
+          <span class="mem-title-text">Members</span>
+          <div class="mem-toggle-area">
+            <span class="online-count">—</span>
+            <button class="mem-toggle-btn" onclick="toggleMemberSidebar()" title="Toggle Sidebar">
+              <span class="toggle-icon">❯</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="mem-list">
+        <!-- Populated dynamically from the community's real membership by chat.js's renderChatMembers() -->
+        <div class="mem-group-title">Loading…</div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Emoji Picker (Absolute) -->
+  <div id="emojiPicker" class="emoji-picker">
+    <div class="emoji-picker-header">SELECT EMOJI</div>
+    <div class="emoji-picker-grid" id="emojiPickerGrid">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <script src="../js/core/auth.js"></script>
+  <script src="../js/core/apiClient.js"></script>
+  <script src="../js/pages/chat.js"></script>
+  <script src="../js/components/notifications.js"></script>
+  <script>
+    // ── Init from URL params (set by community-page.js channel click) ─────────
+    (function initChatFromParams() {
+      const p = new URLSearchParams(window.location.search);
+      const communityId   = p.get('community') || '';
+      const communityName = p.get('cname')     || 'Community';
+      const channelName   = p.get('channel')   || 'general';
+
+      // Set community name in sidebar
+      const nameEl = document.getElementById('chatCommName');
+      if (nameEl) nameEl.textContent = decodeURIComponent(communityName);
+
+      // Set active channel header
+      const chanNameEl  = document.getElementById('activeChanName');
+      const chanTopicEl = document.getElementById('activeChanTopic');
+      if (chanNameEl)  chanNameEl.textContent  = decodeURIComponent(channelName);
+      if (chanTopicEl) chanTopicEl.textContent = `#${decodeURIComponent(channelName)} channel`;
+
+      // Highlight matching channel row if it exists in sidebar
+      document.querySelectorAll('.ch-row .ch-lbl').forEach(lbl => {
+        if (lbl.textContent.trim().toLowerCase() === decodeURIComponent(channelName).toLowerCase()) {
+          lbl.closest('.ch-row')?.classList.add('active');
+        } else {
+          lbl.closest('.ch-row')?.classList.remove('active');
+        }
+      });
+
+      // Update page title
+      document.title = `#${decodeURIComponent(channelName)} — ${decodeURIComponent(communityName)} · Gameunity`;
+
+      // Store context so back button goes to the right community
+      if (communityId) {
+        const backBtn = document.querySelector('button[onclick*="history.back"]');
+        if (backBtn) {
+          backBtn.onclick = () => { window.location.href = `community-page.html?id=${communityId}`; };
+        }
+      }
+    })();
+  </script>
+</body>
+
+</html>
