@@ -1,8 +1,8 @@
 import React , {useState} from 'react'
 
-import "../css/global.css";
-import "../css/components/sidebar.css";
-import "../css/pages/dashboard.css";
+import "../styles/global.css";
+import "../styles/sidebar.css";
+import "../styles/dashboard.css";
 
 const Dashboard = () => {
   return (
