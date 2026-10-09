@@ -1,0 +1,138 @@
+.pricing-intro {
+  color: var(--text-3, #9ca3af);
+  font-size: 13px;
+  margin-bottom: 24px;
+  max-width: 640px;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 900px) {
+  .plan-grid { grid-template-columns: 1fr; }
+}
+
+.plan-card {
+  background: var(--bg-2, #111118);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 16px;
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.plan-card:hover {
+  border-color: rgba(91, 110, 245, 0.25);
+  transform: translateY(-2px);
+}
+
+.plan-card.current {
+  border-color: #10b981;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3);
+}
+
+.plan-card.featured {
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.plan-badge-current {
+  position: absolute;
+  top: -11px;
+  right: 20px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: "DM Sans", sans-serif;
+}
+
+.plan-name {
+  font-family: "Syne", sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-1, #fff);
+}
+
+.plan-price {
+  font-family: "Syne", sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-1, #fff);
+}
+
+.plan-price span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3, #666);
+  font-family: "DM Sans", sans-serif;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.plan-features li {
+  font-size: 13px;
+  color: var(--text-2, #ccc);
+  font-family: "DM Sans", sans-serif;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+
+.plan-features li::before {
+  content: "✓";
+  color: #10b981;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.plan-cta {
+  width: 100%;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13.5px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.plan-cta.primary {
+  background: linear-gradient(135deg, #5b6ef5, #7c5cf6);
+  color: #fff;
+}
+
+.plan-cta.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(91, 110, 245, 0.3); }
+
+.plan-cta.current {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  cursor: default;
+}
+
+.plan-cta.downgrade {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-2, #aaa);
+}
+
+.plan-cta.downgrade:hover { background: rgba(255, 255, 255, 0.04); color: #fff; }
