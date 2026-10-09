@@ -1,0 +1,12 @@
+{
+  "name": "front-end",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gameunity React Frontend Application",
+  "scripts": {
+    "dev": "npm --prefix react-app run dev",
+    "start": "npm --prefix react-app run dev",
+    "build": "npm --prefix react-app run build",
+    "preview": "npm --prefix react-app run preview"
+  }
+}
