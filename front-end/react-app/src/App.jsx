@@ -47,8 +47,11 @@ export default function App() {
       <Route path="/create-community.html" element={<CreateCommunity />} />
       <Route path="/community-page" element={<CommunityPage />} />
       <Route path="/community-page.html" element={<CommunityPage />} />
+      <Route path="/community-page/:id" element={<CommunityPage />} />
+      <Route path="/community/:id" element={<CommunityPage />} />
       <Route path="/community-settings" element={<CommunitySettings />} />
       <Route path="/community-settings.html" element={<CommunitySettings />} />
+      <Route path="/community-settings/:id" element={<CommunitySettings />} />
 
       {/* Events */}
       <Route path="/events" element={<Events />} />

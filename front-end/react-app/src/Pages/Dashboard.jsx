@@ -54,7 +54,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -225,15 +225,25 @@ export default function Dashboard() {
                     key={comm.id}
                     className="comm-card"
                     style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/community/${comm.id}`)}
+                    onClick={() => navigate(`/community-page?id=${comm.id}`)}
                   >
-                    <div className="comm-card-icon">{comm.icon || '🏘️'}</div>
-                    <div className="comm-card-info">
-                      <div className="comm-card-name">{comm.name}</div>
-                      <div className="comm-card-meta">{(comm.members || 0).toLocaleString()} members</div>
+                    <div className="comm-card-banner banner-purple"></div>
+                    <div className="comm-card-icon grad-purple">{comm.icon || '🏘️'}</div>
+                    <div className="comm-card-name">{comm.name}</div>
+                    <div className="comm-card-meta">
+                      <span>{(comm.members || 0).toLocaleString()} members</span>
                     </div>
                   </div>
                 ))}
+                <div
+                  className="comm-card create-card"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => navigate('/create-community')}
+                >
+                  <div style={{ fontSize: '24px', color: 'var(--accent)', marginBottom: '4px' }}>+</div>
+                  <div className="comm-card-name" style={{ marginTop: 0 }}>Create Community</div>
+                  <div className="comm-card-meta">Start your journey</div>
+                </div>
               </div>
             )}
           </div>

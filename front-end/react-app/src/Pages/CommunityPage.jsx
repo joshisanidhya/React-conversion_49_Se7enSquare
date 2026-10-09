@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import '../styles/global.css';
 import '../styles/community-page.css';
 
@@ -42,7 +42,9 @@ const DEFAULT_COMMUNITY = {
 
 export default function CommunityPage() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id: paramId } = useParams();
+  const [searchParams] = useSearchParams();
+  const id = paramId || searchParams.get('id') || '1';
   const user = getUser();
 
   const [community, setCommunity] = useState(DEFAULT_COMMUNITY);

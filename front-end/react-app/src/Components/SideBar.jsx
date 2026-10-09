@@ -133,73 +133,137 @@ export default function SideBar() {
       id="nexusSidebar"
       aria-label="Main navigation"
     >
-      {/* Logo */}
-      <div className="sb-logo">
-        <div className="sb-hex">G</div>
-        {!collapsed && <span className="sb-logo-name">Gameunity</span>}
+      {/* Brand Header */}
+      <div className="sb-brand">
+        <Link to="/dashboard" className="sb-brand__logo" style={{ textDecoration: 'none' }}>
+          <span className="sb-brand__icon">🎮</span>
+          {!collapsed && <span className="sb-brand__name">Gameunity</span>}
+        </Link>
         <button
-          className="sb-collapse-btn"
+          className={`sb-toggle-btn${collapsed ? ' rotated' : ''}`}
           onClick={toggleCollapse}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand' : 'Collapse'}
         >
-          {collapsed ? '›' : '‹'}
+          <svg
+            className="sb-toggle-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
         </button>
       </div>
 
       {/* Navigation Sections */}
-      <nav className="sb-nav" aria-label="Sidebar navigation">
+      <div className="sb-nav" role="list">
         {sections.map((section) => (
-          <div key={section.sectionId} className="sb-section">
+          <div key={section.sectionId} className="sb-section" data-section={section.sectionId}>
             {section.label && !collapsed && (
-              <div className="sb-section-label">{section.label}</div>
+              <div className="sb-section-sep">
+                <span className="sb-section-label">{section.label}</span>
+              </div>
             )}
             {section.items.map((item) => (
               <Link
                 key={item.id}
                 to={item.link}
-                className={`sb-item${isActive(item.link) ? ' active' : ''}`}
+                className={`sb-item${isActive(item.link) ? ' sb-item--active' : ''}`}
+                data-id={item.id}
+                data-sb-tooltip={item.name}
                 title={collapsed ? item.name : undefined}
               >
-                <span className="sb-item-icon">{item.icon}</span>
-                {!collapsed && (
-                  <>
-                    <span className="sb-item-name">{item.name}</span>
-                    {item.badge && <span className="sb-item-badge">{item.badge}</span>}
-                  </>
+                <span className="sb-item__icon" aria-hidden="true">{item.icon}</span>
+                {!collapsed && <span className="sb-item__label">{item.name}</span>}
+                {!collapsed && item.badge && (
+                  <span className={`sb-badge sb-badge--${item.badge.toLowerCase().replace(/_/g, '-')}`}>
+                    {item.badge}
+                  </span>
                 )}
               </Link>
             ))}
           </div>
         ))}
-      </nav>
+      </div>
 
-      {/* User Footer */}
-      <div className="sb-footer">
-        <div
-          className="sb-user"
-          style={{ cursor: 'pointer' }}
+      {/* User Profile Sticky Footer */}
+      <div className="sb-profile" id="sbProfile">
+        <Link
+          to="/profile-settings"
+          className="sb-profile__av user-avatar"
+          style={{
+            cursor: 'pointer',
+            boxShadow: `0 0 0 2px ${meta.color}55`,
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
           title={`${user.firstName} ${user.lastName} (${meta.tier})`}
         >
-          <div
-            className="sb-user-av"
-            style={{ background: meta.color, color: '#000', fontWeight: 700, fontSize: '13px' }}
-          >
-            {user.avatar ? (
-              <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-            ) : (
-              initials || '?'
-            )}
-          </div>
-          {!collapsed && (
-            <div className="sb-user-info">
-              <div className="sb-user-name">{user.firstName} {user.lastName}</div>
-              <div className="sb-user-role" style={{ color: meta.color }}>
-                {meta.badge ? meta.badge : meta.tier}
-              </div>
-            </div>
+          {user.avatar ? (
+            <img
+              src={user.avatar}
+              alt="avatar"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+            />
+          ) : (
+            initials || 'U'
           )}
-        </div>
+        </Link>
+        {!collapsed && (
+          <Link
+            to="/profile-settings"
+            className="sb-profile__info"
+            style={{ textDecoration: 'none', cursor: 'pointer' }}
+          >
+            <div className="sb-profile__name user-name">{user.firstName} {user.lastName}</div>
+            <div className="sb-profile__role" style={{ color: meta.color }}>
+              {meta.badge && (
+                <span
+                  className="sb-profile__badge"
+                  style={{
+                    background: `${meta.color}18`,
+                    borderColor: `${meta.color}40`,
+                    color: meta.color,
+                  }}
+                >
+                  {meta.badge}
+                </span>
+              )}
+              <span className="user-role">{meta.tier}</span>
+            </div>
+          </Link>
+        )}
+        {!collapsed && (
+          <button
+            className="sb-profile__logout"
+            onClick={() => {
+              localStorage.removeItem('nexus_user');
+              localStorage.removeItem('role');
+              window.location.href = '/login';
+            }}
+            aria-label="Log out"
+            title="Log out"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        )}
       </div>
     </aside>
   );

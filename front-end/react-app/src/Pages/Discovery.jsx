@@ -36,7 +36,7 @@ export default function Discovery() {
   const [sortBy, setSortBy] = useState('active');
   const [showSort, setShowSort] = useState(false);
   const [joinedIds, setJoinedIds] = useState(new Set([1]));
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchCommunities() {

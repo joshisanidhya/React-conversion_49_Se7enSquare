@@ -35,20 +35,7 @@ body.theme-light {
   box-sizing: border-box;
 }
 
-html,
-body {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
-
-body {
-  margin: 0;
-  font-family: "DM Sans", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  display: block;
-}
+/* Community settings page layout */
 
 button,
 input,
@@ -670,11 +657,7 @@ body.theme-light .sidebar {
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
 
-  html,
-  body {
-    overflow: auto;
-    height: auto;
-  }
+
 
   .page {
     height: auto;

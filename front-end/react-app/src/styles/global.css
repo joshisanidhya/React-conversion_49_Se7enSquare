@@ -63,22 +63,39 @@ html.a11y-reduced-motion *::after {
   margin: 0;
   padding: 0;
 }
-html,
-body {
-  height: 100%;
-  overflow: hidden;
+html {
+  width: 100%;
+  min-height: 100%;
+  scroll-behavior: smooth;
 }
 body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
   font-family: "DM Sans", sans-serif;
   background: var(--bg-deep);
   color: var(--text-1);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+#root {
+  width: 100%;
+  min-height: 100vh;
   display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  position: relative;
 }
 .app-shell {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
+  width: 100%;
   height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  flex: 1;
 }
 [data-tooltip]::after {
   content: attr(data-tooltip);
@@ -112,8 +129,10 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  width: 100%;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 .header {
   height: var(--header-h);

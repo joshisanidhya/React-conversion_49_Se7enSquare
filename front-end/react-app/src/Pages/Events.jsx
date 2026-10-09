@@ -167,9 +167,9 @@ export default function Events() {
   ];
 
   return (
-    <div className="app-shell">
+    <div className="app-shell events-page">
       <SideBar />
-      <div className="main">
+      <div className="main events-main">
         {/* Header */}
         <header className="header">
           <div className="header-title">Events</div>

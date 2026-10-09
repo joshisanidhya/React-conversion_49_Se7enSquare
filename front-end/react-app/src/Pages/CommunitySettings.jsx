@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import '../styles/global.css';
 import '../styles/community-settings.css';
 
@@ -7,8 +7,9 @@ const API_BASE = 'http://localhost:3000/api';
 
 export default function CommunitySettings() {
   const navigate = useNavigate();
+  const { id: paramId } = useParams();
   const [searchParams] = useSearchParams();
-  const communityId = searchParams.get('id') || '1';
+  const communityId = paramId || searchParams.get('id') || '1';
 
   const [activeTab, setActiveTab] = useState('basic');
   const [loading, setLoading] = useState(true);

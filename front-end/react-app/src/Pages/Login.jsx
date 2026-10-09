@@ -205,7 +205,7 @@ export default function Login() {
   };
 
   return (
-    <div className="login-page-container" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <div className="login-page-container" style={{ minHeight: '100vh', width: '100%', position: 'relative', overflowX: 'hidden', overflowY: 'auto' }}>
       {/* Back to Home Link */}
       <Link
         to="/landing"
