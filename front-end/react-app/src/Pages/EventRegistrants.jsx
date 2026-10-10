@@ -7,6 +7,14 @@ import '../styles/admin-dashboard.css';
 
 const API_BASE = 'http://localhost:3000/api';
 
+function getRole() {
+  try {
+    const stored = localStorage.getItem('nexus_user') || localStorage.getItem('currentUser');
+    const raw = stored ? JSON.parse(stored) : {};
+    return raw.role || 'organizer';
+  } catch { return 'organizer'; }
+}
+
 export default function EventRegistrants() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -30,7 +38,9 @@ export default function EventRegistrants() {
       }
 
       try {
-        const res = await fetch(`${API_BASE}/events/${eventId}/registrants`);
+        const res = await fetch(`${API_BASE}/events/${eventId}/registrants`, {
+          headers: { 'x-role': getRole() },
+        });
         if (res.ok) {
           const data = await res.json();
           setEventTitle(data.eventTitle || 'Tournament');

@@ -10,8 +10,13 @@ const API_BASE = 'http://localhost:3000/api';
 function getUser() {
   try {
     const raw = JSON.parse(localStorage.getItem('nexus_user') || localStorage.getItem('currentUser') || '{}');
-    return { firstName: raw.firstName || 'You', username: raw.username || 'you', role: raw.role || 'user' };
-  } catch { return { firstName: 'You', username: 'you', role: 'user' }; }
+    return {
+      id: raw.id || 4,
+      firstName: raw.firstName || raw.username || 'You',
+      username: raw.username || 'you',
+      role: raw.role || 'user',
+    };
+  } catch { return { id: 4, firstName: 'You', username: 'you', role: 'user' }; }
 }
 
 const EMOJIS = ['😊','😂','🔥','❤️','👍','🎉','🤔','😎','💡','🚀','🏆','⚡','🎮','💻','🌟','✨'];
@@ -57,40 +62,63 @@ export default function Chat() {
 
   useEffect(() => {
     async function fetchChannels() {
-      if (!communityId) { setLoading(false); return; }
+      if (!communityId) {
+        // default fallback channel
+        setActiveChannel({ id: 'general', name: 'general', topic: 'The main hub 👋' });
+        setLoading(false);
+        return;
+      }
       try {
-        const res = await fetch(`${API_BASE}/communities/${communityId}/channels`, { headers: { 'x-role': user.role } });
+        const res = await fetch(`${API_BASE}/communities/${communityId}`, { headers: { 'x-role': user.role } });
         if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            setChannels(data);
-            const found = data.find(c => c.name === initialChannel) || data[0];
+          const comm = await res.json();
+          if (Array.isArray(comm.channels) && comm.channels.length > 0) {
+            const parsed = comm.channels.map((c, idx) => ({
+              id: typeof c === 'string' ? c : c.id || c.name || String(idx + 1),
+              name: typeof c === 'string' ? c : c.name,
+              topic: typeof c === 'object' && c.topic ? c.topic : `#${typeof c === 'string' ? c : c.name} channel`,
+            }));
+            setChannels(parsed);
+            const found = parsed.find(c => c.name === initialChannel || c.id === initialChannel) || parsed[0];
             if (found) setActiveChannel(found);
+          } else {
+            setActiveChannel({ id: 'general', name: 'general', topic: 'General discussion' });
           }
         }
       } catch {}
       setLoading(false);
     }
     fetchChannels();
-  }, [communityId, user.role]);
+  }, [communityId, user.role, initialChannel]);
 
   useEffect(() => {
     async function fetchMessages() {
       if (!activeChannel?.id) return;
       try {
-        const res = await fetch(`${API_BASE}/messages/channel/${activeChannel.id}`, { headers: { 'x-role': user.role } });
+        const res = await fetch(`${API_BASE}/channels/${activeChannel.id}/messages`, {
+          headers: { 'x-role': user.role }
+        });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            setMessages(data.map(m => ({
-              id: m.id,
-              author: m.author?.name || m.author || 'User',
-              initials: (m.author?.name || m.author || 'U').slice(0, 2).toUpperCase(),
-              color: '#6366f1',
-              text: m.content || m.text || '',
-              time: m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-              reactions: m.reactions || [],
-            })));
+            setMessages(data.map(m => {
+              const reactionsArr = [];
+              if (m.reactions && typeof m.reactions === 'object') {
+                for (const [emoji, count] of Object.entries(m.reactions)) {
+                  reactionsArr.push({ emoji, count: Number(count) });
+                }
+              }
+              const authorName = m.authorName || m.author?.name || m.author || 'User';
+              return {
+                id: m.id,
+                author: authorName,
+                initials: authorName.slice(0, 2).toUpperCase(),
+                color: '#6366f1',
+                text: m.content || '',
+                time: m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+                reactions: reactionsArr,
+              };
+            }));
           }
         }
       } catch {}
@@ -104,30 +132,46 @@ export default function Chat() {
 
   const sendMessage = async () => {
     const text = msgInput.trim();
-    if (!text) return;
-    const newMsg = {
+    if (!text || !activeChannel?.id) return;
+
+    const fullContent = replyTo ? `↩️ ${replyTo}: ${text}` : text;
+    const authorName = user.username || user.firstName || 'User';
+
+    const tempMsg = {
       id: Date.now(),
-      author: user.firstName,
-      initials: user.firstName.slice(0, 2).toUpperCase(),
+      author: authorName,
+      initials: authorName.slice(0, 2).toUpperCase(),
       color: '#34d399',
-      text: replyTo ? `↩️ ${replyTo}: ${text}` : text,
+      text: fullContent,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       reactions: [],
     };
-    setMessages(prev => [...prev, newMsg]);
+    setMessages(prev => [...prev, tempMsg]);
     setMsgInput('');
     setReplyTo(null);
 
     try {
-      await fetch(`${API_BASE}/messages`, {
+      const res = await fetch(`${API_BASE}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-role': user.role },
-        body: JSON.stringify({ channelId: activeChannel?.id, content: text, communityId }),
+        body: JSON.stringify({
+          channelId: String(activeChannel.id),
+          content: fullContent,
+          communityId: Number(communityId) || 1,
+          authorId: user.id || 4,
+          authorName: authorName,
+        }),
       });
-    } catch {}
+      if (res.ok) {
+        const created = await res.json();
+        setMessages(prev => prev.map(m => m.id === tempMsg.id ? { ...m, id: created.id } : m));
+      }
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
   };
 
-  const toggleReaction = (msgId, emoji) => {
+  const toggleReaction = async (msgId, emoji) => {
     setMessages(prev => prev.map(m => {
       if (m.id !== msgId) return m;
       const existing = m.reactions.find(r => r.emoji === emoji);
@@ -136,6 +180,18 @@ export default function Chat() {
         : [...m.reactions, { emoji, count: 1 }];
       return { ...m, reactions };
     }));
+
+    try {
+      await fetch(`${API_BASE}/messages/${msgId}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-role': user.role },
+        body: JSON.stringify({
+          emoji,
+          actorId: user.id || 4,
+          actorName: user.username || user.firstName,
+        }),
+      });
+    } catch {}
   };
 
   const filteredChannels = channels.filter(c =>

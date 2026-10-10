@@ -165,7 +165,10 @@ export default function CreateCommunity() {
     try {
       const res = await fetch(`${API_BASE}/communities`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': currentUser.role || 'user',
+        },
         body: JSON.stringify(payload),
       });
 

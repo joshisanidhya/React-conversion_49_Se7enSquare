@@ -244,6 +244,7 @@ export default function SideBar() {
             className="sb-profile__logout"
             onClick={() => {
               localStorage.removeItem('nexus_user');
+              localStorage.removeItem('currentUser');
               localStorage.removeItem('role');
               window.location.href = '/login';
             }}

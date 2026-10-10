@@ -5,6 +5,14 @@ import '../styles/community-settings.css';
 
 const API_BASE = 'http://localhost:3000/api';
 
+function getRole() {
+  try {
+    const stored = localStorage.getItem('nexus_user') || localStorage.getItem('currentUser');
+    const raw = stored ? JSON.parse(stored) : {};
+    return raw.role || 'user';
+  } catch { return 'user'; }
+}
+
 export default function CommunitySettings() {
   const navigate = useNavigate();
   const { id: paramId } = useParams();
@@ -50,12 +58,15 @@ export default function CommunitySettings() {
   useEffect(() => {
     async function loadCommunity() {
       try {
-        const res = await fetch(`${API_BASE}/communities/${communityId}`);
+        const res = await fetch(`${API_BASE}/communities/${communityId}`, {
+          headers: { 'x-role': getRole() },
+        });
         if (res.ok) {
           const data = await res.json();
           setCommunity((prev) => ({
             ...prev,
             ...data,
+            rules: Array.isArray(data.rules) ? data.rules.join('\n') : (data.rules || prev.rules),
             channels: Array.isArray(data.channels)
               ? data.channels.map((ch, idx) =>
                   typeof ch === 'string' ? { id: idx + 1, name: ch, type: 'Text' } : ch
@@ -134,14 +145,23 @@ export default function CommunitySettings() {
 
   const saveSettings = async () => {
     try {
+      const parsedRules = Array.isArray(community.rules)
+        ? community.rules
+        : (typeof community.rules === 'string'
+            ? community.rules.split('\n').map(r => r.trim()).filter(Boolean)
+            : undefined);
+
       await fetch(`${API_BASE}/communities/${communityId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': getRole(),
+        },
         body: JSON.stringify({
           name: community.name,
           description: community.description,
-          banner: community.banner,
-          rules: community.rules,
+          banner: community.banner || undefined,
+          rules: parsedRules,
         }),
       });
       showToast('✅ Community settings saved successfully!');

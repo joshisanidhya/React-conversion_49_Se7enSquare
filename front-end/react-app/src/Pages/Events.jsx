@@ -10,8 +10,13 @@ const API_BASE = 'http://localhost:3000/api';
 function getUser() {
   try {
     const raw = JSON.parse(localStorage.getItem('nexus_user') || localStorage.getItem('currentUser') || '{}');
-    return { role: raw.role || 'user', firstName: raw.firstName || 'User', username: raw.username || 'user' };
-  } catch { return { role: 'user', firstName: 'User', username: 'user' }; }
+    return {
+      id: raw.id || 4,
+      role: raw.role || 'user',
+      firstName: raw.firstName || 'User',
+      username: raw.username || 'user',
+    };
+  } catch { return { id: 4, role: 'user', firstName: 'User', username: 'user' }; }
 }
 
 const DEFAULT_EVENTS = [
@@ -61,21 +66,22 @@ export default function Events() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [evRes, commsRes] = await Promise.all([
+        const [evRes, commsRes, regsRes] = await Promise.all([
           fetch(`${API_BASE}/events`, { headers: { 'x-role': user.role } }),
           fetch(`${API_BASE}/communities`, { headers: { 'x-role': user.role } }),
+          user.id ? fetch(`${API_BASE}/event-registrations?userId=${user.id}`, { headers: { 'x-role': user.role } }) : Promise.resolve(null),
         ]);
         if (evRes.ok) { const d = await evRes.json(); if (Array.isArray(d) && d.length > 0) setEvents(d); }
         if (commsRes.ok) { const d = await commsRes.json(); if (Array.isArray(d)) setCommunities(d); }
+        if (regsRes && regsRes.ok) {
+          const regsData = await regsRes.json();
+          if (Array.isArray(regsData)) setMyRegistrations(regsData);
+        }
       } catch {}
-
-      // Load registrations from localStorage
-      const stored = JSON.parse(localStorage.getItem('nexus_event_registrations') || '[]');
-      setMyRegistrations(stored);
       setLoading(false);
     }
     fetchData();
-  }, [user.role]);
+  }, [user.role, user.id]);
 
   const canCreate = ['user', 'community_manager', 'organizer', 'admin'].includes(user.role);
   const isOrganizer = user.role === 'organizer';
@@ -94,20 +100,32 @@ export default function Events() {
 
   const submitRegistration = async () => {
     if (!validateRegForm()) return;
-    const reg = { ...regForm, eventId: regModal.id, eventTitle: regModal.title, registeredAt: new Date().toISOString() };
-    const stored = JSON.parse(localStorage.getItem('nexus_event_registrations') || '[]');
-    stored.push(reg);
-    localStorage.setItem('nexus_event_registrations', JSON.stringify(stored));
-    setMyRegistrations(stored);
+    const regPayload = {
+      eventId: Number(regModal.id),
+      userId: Number(user.id || 4),
+      fullName: regForm.fullName.trim(),
+      contactEmail: regForm.email.trim(),
+      phone: regForm.phone.trim(),
+      inGameId: regForm.inGameId.trim(),
+    };
+    try {
+      const res = await fetch(`${API_BASE}/event-registrations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-role': user.role },
+        body: JSON.stringify(regPayload),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setMyRegistrations(prev => [...prev, { ...created, eventTitle: regModal.title }]);
+      } else {
+        setMyRegistrations(prev => [...prev, { ...regPayload, eventTitle: regModal.title }]);
+      }
+    } catch {
+      setMyRegistrations(prev => [...prev, { ...regPayload, eventTitle: regModal.title }]);
+    }
     setRegModal(null);
     setRegForm({ fullName: '', email: '', phone: '', inGameId: '' });
-    showToast(`✅ Registered for ${reg.eventTitle}!`);
-    try {
-      await fetch(`${API_BASE}/events/${regModal.id}/register`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-role': user.role },
-        body: JSON.stringify(reg),
-      });
-    } catch {}
+    showToast(`✅ Registered for ${regModal.title}!`);
   };
 
   const validateCreate = () => {
@@ -125,16 +143,36 @@ export default function Events() {
   const submitEvent = async (e) => {
     e.preventDefault();
     if (!validateCreate()) return;
-    const newEvent = { ...form, type: eventType, status: 'pending', id: Date.now(), registered: 0, free: true };
-    setEvents(prev => [...prev, newEvent]);
-    setActiveTab('upcoming');
-    showToast('✅ Event submitted for approval!');
+    const commId = Number(form.community) || (communities[0] ? communities[0].id : 1);
+    const newEvent = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      communityId: commId,
+      date: form.date,
+      time: form.time,
+      type: eventType,
+      status: 'pending',
+      maxAttendees: Number(form.capacity) || 50,
+      createdBy: user.username || user.firstName,
+      organiserId: user.id || 4,
+    };
     try {
-      await fetch(`${API_BASE}/events`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-role': user.role },
+      const res = await fetch(`${API_BASE}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-role': user.role },
         body: JSON.stringify(newEvent),
       });
-    } catch {}
+      if (res.ok) {
+        const created = await res.json();
+        setEvents(prev => [...prev, created]);
+      } else {
+        setEvents(prev => [...prev, { ...newEvent, id: Date.now() }]);
+      }
+    } catch {
+      setEvents(prev => [...prev, { ...newEvent, id: Date.now() }]);
+    }
+    setActiveTab('upcoming');
+    showToast('✅ Event submitted for approval!');
   };
 
   const saveDraft = () => {

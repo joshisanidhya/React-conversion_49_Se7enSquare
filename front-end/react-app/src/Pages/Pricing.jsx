@@ -9,6 +9,20 @@ import '../styles/pricing.css';
  * Converted from pricing.html, rendering subscription plans via data mapping,
  * managing current plan selection in React state, and providing plan switching feedback.
  */
+const API_BASE = 'http://localhost:3000/api';
+
+function getCurrentUser() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('nexus_user') || localStorage.getItem('currentUser') || '{}');
+    return {
+      id: raw.id || 1,
+      role: raw.role || 'user',
+    };
+  } catch {
+    return { id: 1, role: 'user' };
+  }
+}
+
 export default function Pricing() {
   const PLANS = [
     {
@@ -69,7 +83,21 @@ export default function Pricing() {
     }, 2800);
   };
 
-  const handlePlanChange = (planId) => {
+  useEffect(() => {
+    const user = getCurrentUser();
+    fetch(`${API_BASE}/subscriptions/status?userId=${user.id}`, {
+      headers: { 'x-role': user.role },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && data.plan) {
+          setCurrentPlan(data.plan);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handlePlanChange = async (planId) => {
     const targetPlan = PLANS.find((p) => p.id === planId);
     if (!targetPlan) return;
 
@@ -82,15 +110,43 @@ export default function Pricing() {
       if (!confirmed) return;
     }
 
+    const user = getCurrentUser();
+    try {
+      const res = await fetch(`${API_BASE}/subscriptions/upgrade`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': user.role,
+        },
+        body: JSON.stringify({ userId: Number(user.id), plan: planId }),
+      });
+      if (res.ok) {
+        setCurrentPlan(planId);
+        showToast('✅', `Now on the ${targetPlan.name} plan`);
+        return;
+      }
+    } catch {}
+
     setCurrentPlan(planId);
     showToast('✅', `Now on the ${targetPlan.name} plan`);
   };
 
-  const handleCancelSubscription = () => {
+  const handleCancelSubscription = async () => {
     if (currentPlan === 'free') {
       showToast('ℹ️', 'You are already on the Free plan.');
       return;
     }
+    const user = getCurrentUser();
+    try {
+      await fetch(`${API_BASE}/subscriptions/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': user.role,
+        },
+        body: JSON.stringify({ userId: Number(user.id) }),
+      });
+    } catch {}
     setCurrentPlan('free');
     showToast('✅', 'Subscription cancelled — Reverted to the Free plan');
   };

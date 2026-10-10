@@ -20,12 +20,11 @@ const DEFAULT_COMMUNITIES = [
   { id: 8, name: 'Learn Anything', icon: '📚', members: 9800, online: 560, category: 'Education', description: 'Courses, tutorials, and study groups.', tags: ['Courses', 'Mentoring'] },
 ];
 
-function getRole() {
+function getCurrentUser() {
   try {
     const stored = localStorage.getItem('nexus_user') || localStorage.getItem('currentUser');
-    const raw = stored ? JSON.parse(stored) : {};
-    return raw.role || 'user';
-  } catch { return 'user'; }
+    return stored ? JSON.parse(stored) : {};
+  } catch { return {}; }
 }
 
 export default function Discovery() {
@@ -40,11 +39,22 @@ export default function Discovery() {
 
   useEffect(() => {
     async function fetchCommunities() {
+      const user = getCurrentUser();
+      const role = user.role || 'user';
       try {
-        const res = await fetch(`${API_BASE}/communities`, { headers: { 'x-role': getRole() } });
-        if (res.ok) {
-          const data = await res.json();
+        const [commsRes, memsRes] = await Promise.all([
+          fetch(`${API_BASE}/communities`, { headers: { 'x-role': role } }),
+          user.id ? fetch(`${API_BASE}/memberships?userId=${user.id}`, { headers: { 'x-role': role } }) : Promise.resolve(null),
+        ]);
+        if (commsRes.ok) {
+          const data = await commsRes.json();
           if (Array.isArray(data) && data.length > 0) setCommunities(data);
+        }
+        if (memsRes && memsRes.ok) {
+          const mems = await memsRes.json();
+          if (Array.isArray(mems)) {
+            setJoinedIds(new Set(mems.map(m => m.communityId)));
+          }
         }
       } catch { /* Use defaults */ }
       finally { setLoading(false); }
@@ -63,13 +73,48 @@ export default function Discovery() {
     return (b.online || 0) - (a.online || 0); // most active default
   });
 
-  const toggleJoin = (id, e) => {
+  const toggleJoin = async (id, e) => {
     e.stopPropagation();
+    const user = getCurrentUser();
+    const role = user.role || 'user';
+    const isJoined = joinedIds.has(id);
+
+    // Optimistic UI update
     setJoinedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (isJoined) next.delete(id); else next.add(id);
       return next;
     });
+
+    try {
+      if (isJoined) {
+        const memsRes = await fetch(`${API_BASE}/memberships?userId=${user.id || 4}`, { headers: { 'x-role': role } });
+        if (memsRes.ok) {
+          const mems = await memsRes.json();
+          const target = mems.find(m => m.communityId === id);
+          if (target) {
+            await fetch(`${API_BASE}/memberships/${target.id}`, {
+              method: 'DELETE',
+              headers: { 'x-role': role }
+            });
+          }
+        }
+      } else {
+        await fetch(`${API_BASE}/memberships`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-role': role
+          },
+          body: JSON.stringify({
+            userId: user.id || 4,
+            communityId: id
+          })
+        });
+      }
+    } catch (err) {
+      console.error('Membership toggle error:', err);
+    }
   };
 
   const sortLabels = { active: 'Most Active', members: 'Most Members', trending: 'Trending', newest: 'Recently Created' };

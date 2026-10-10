@@ -25,9 +25,15 @@ export default function User() {
   const [roleFilter, setRoleFilter] = useState('all');
 
   useEffect(() => {
+    let role = 'admin';
+    try {
+      const u = JSON.parse(localStorage.getItem('nexus_user') || localStorage.getItem('currentUser') || '{}');
+      if (u.role) role = u.role;
+    } catch {}
+
     fetch(`${API_BASE}/users`, {
       headers: {
-        'x-role': 'admin',
+        'x-role': role,
       },
     })
       .then((res) => (res.ok ? res.json() : []))

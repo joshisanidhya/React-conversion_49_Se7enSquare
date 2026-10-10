@@ -81,13 +81,12 @@ export default function Report() {
   const submitReport = async () => {
     if (!selectedReason || !confirmed) return;
     setSubmitting(true);
+    const reasonText = (selectedReason + (additionalContext ? `: ${additionalContext}` : '')).slice(0, 195);
     const reportData = {
-      reporterId: user.id,
-      targetType: selectedTarget?.type || 'user',
-      targetId: selectedTarget?.id,
-      reason: selectedReason,
-      context: additionalContext,
-      anonymous: true,
+      reporterId: Number(user.id || 4),
+      targetType: selectedTarget?.type === 'post' || selectedTarget?.type === 'community' ? selectedTarget.type : 'user',
+      targetId: Number(selectedTarget?.id || 1),
+      reason: reasonText.length >= 8 ? reasonText : `${reasonText} - reported by user`,
     };
     try {
       const res = await fetch(`${API_BASE}/reports`, {
@@ -97,7 +96,7 @@ export default function Report() {
       });
       if (res.ok) {
         const data = await res.json();
-        setRefId(data.id || `RPT-${Date.now()}`);
+        setRefId(`RPT-${data.id}`);
       } else {
         setRefId(`RPT-${Date.now()}`);
       }

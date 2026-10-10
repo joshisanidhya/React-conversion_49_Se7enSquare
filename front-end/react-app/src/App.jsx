@@ -24,10 +24,42 @@ import OwnerDashboard from './Pages/OwnerDashboard';
 import ProfileSettings from './Pages/ProfileSettings';
 import User from './Pages/User';
 
+// Protected Route wrapper with role-based access control
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem('nexus_user') || localStorage.getItem('currentUser');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function ProtectedRoute({ children, allowedRoles }) {
+  const user = getStoredUser();
+
+  if (!user || !user.username) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && allowedRoles.length > 0) {
+    const role = (user.role || '').toLowerCase();
+    // admin has superuser access to all admin/mod/cm/organizer/owner views
+    if (role === 'admin') {
+      return children;
+    }
+    if (!allowedRoles.includes(role)) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  return children;
+}
+
 export default function App() {
   return (
     <Routes>
-      {/* Core Pages */}
+      {/* Public Routes */}
       <Route path="/" element={<Index />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/landing.html" element={<Landing />} />
@@ -35,51 +67,77 @@ export default function App() {
       <Route path="/login.html" element={<Login />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/pricing.html" element={<Pricing />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/dashboard.html" element={<Dashboard />} />
 
-      {/* Community & Chat */}
-      <Route path="/chat" element={<Chat />} />
-      <Route path="/chat.html" element={<Chat />} />
-      <Route path="/discovery" element={<Discovery />} />
-      <Route path="/discovery.html" element={<Discovery />} />
-      <Route path="/create-community" element={<CreateCommunity />} />
-      <Route path="/create-community.html" element={<CreateCommunity />} />
-      <Route path="/community-page" element={<CommunityPage />} />
-      <Route path="/community-page.html" element={<CommunityPage />} />
-      <Route path="/community-page/:id" element={<CommunityPage />} />
-      <Route path="/community/:id" element={<CommunityPage />} />
-      <Route path="/community-settings" element={<CommunitySettings />} />
-      <Route path="/community-settings.html" element={<CommunitySettings />} />
-      <Route path="/community-settings/:id" element={<CommunitySettings />} />
+      {/* Authenticated User Core Routes */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/dashboard.html" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+      <Route path="/chat.html" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+      <Route path="/discovery" element={<ProtectedRoute><Discovery /></ProtectedRoute>} />
+      <Route path="/discovery.html" element={<ProtectedRoute><Discovery /></ProtectedRoute>} />
+      <Route path="/create-community" element={<ProtectedRoute><CreateCommunity /></ProtectedRoute>} />
+      <Route path="/create-community.html" element={<ProtectedRoute><CreateCommunity /></ProtectedRoute>} />
+      <Route path="/community-page" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/community-page.html" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/community-page/:id" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/community/:id" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+      <Route path="/community-settings" element={<ProtectedRoute><CommunitySettings /></ProtectedRoute>} />
+      <Route path="/community-settings.html" element={<ProtectedRoute><CommunitySettings /></ProtectedRoute>} />
+      <Route path="/community-settings/:id" element={<ProtectedRoute><CommunitySettings /></ProtectedRoute>} />
+      <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+      <Route path="/events.html" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+      <Route path="/event-registrants" element={<ProtectedRoute><EventRegistrants /></ProtectedRoute>} />
+      <Route path="/event-registrants.html" element={<ProtectedRoute><EventRegistrants /></ProtectedRoute>} />
+      <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+      <Route path="/report.html" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+      <Route path="/appeal" element={<ProtectedRoute><Appeal /></ProtectedRoute>} />
+      <Route path="/appeal.html" element={<ProtectedRoute><Appeal /></ProtectedRoute>} />
+      <Route path="/profile-settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+      <Route path="/profile-settings.html" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+      <Route path="/user" element={<ProtectedRoute><User /></ProtectedRoute>} />
+      <Route path="/user.html" element={<ProtectedRoute><User /></ProtectedRoute>} />
 
-      {/* Events */}
-      <Route path="/events" element={<Events />} />
-      <Route path="/events.html" element={<Events />} />
-      <Route path="/event-approval" element={<EventApproval />} />
-      <Route path="/event-approval.html" element={<EventApproval />} />
-      <Route path="/event-registrants" element={<EventRegistrants />} />
-      <Route path="/event-registrants.html" element={<EventRegistrants />} />
-
-      {/* Moderation, Reports & Appeals */}
-      <Route path="/report" element={<Report />} />
-      <Route path="/report.html" element={<Report />} />
-      <Route path="/appeal" element={<Appeal />} />
-      <Route path="/appeal.html" element={<Appeal />} />
-      <Route path="/mod-panel" element={<ModPanel />} />
-      <Route path="/mod-panel.html" element={<ModPanel />} />
-
-      {/* Dashboards & Settings */}
-      <Route path="/admin-dashboard" element={<AdminDashboard />} />
-      <Route path="/admin-dashboard.html" element={<AdminDashboard />} />
-      <Route path="/organizer-dashboard" element={<OrganizerDashboard />} />
-      <Route path="/organizer-dashboard.html" element={<OrganizerDashboard />} />
-      <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-      <Route path="/owner-dashboard.html" element={<OwnerDashboard />} />
-      <Route path="/profile-settings" element={<ProfileSettings />} />
-      <Route path="/profile-settings.html" element={<ProfileSettings />} />
-      <Route path="/user" element={<User />} />
-      <Route path="/user.html" element={<User />} />
+      {/* Role-Specific Protected Routes */}
+      <Route
+        path="/admin-dashboard"
+        element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>}
+      />
+      <Route
+        path="/admin-dashboard.html"
+        element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>}
+      />
+      <Route
+        path="/owner-dashboard"
+        element={<ProtectedRoute allowedRoles={['owner', 'admin']}><OwnerDashboard /></ProtectedRoute>}
+      />
+      <Route
+        path="/owner-dashboard.html"
+        element={<ProtectedRoute allowedRoles={['owner', 'admin']}><OwnerDashboard /></ProtectedRoute>}
+      />
+      <Route
+        path="/organizer-dashboard"
+        element={<ProtectedRoute allowedRoles={['organizer', 'admin']}><OrganizerDashboard /></ProtectedRoute>}
+      />
+      <Route
+        path="/organizer-dashboard.html"
+        element={<ProtectedRoute allowedRoles={['organizer', 'admin']}><OrganizerDashboard /></ProtectedRoute>}
+      />
+      <Route
+        path="/mod-panel"
+        element={<ProtectedRoute allowedRoles={['moderator', 'admin']}><ModPanel /></ProtectedRoute>}
+      />
+      <Route
+        path="/mod-panel.html"
+        element={<ProtectedRoute allowedRoles={['moderator', 'admin']}><ModPanel /></ProtectedRoute>}
+      />
+      <Route
+        path="/event-approval"
+        element={<ProtectedRoute allowedRoles={['community_manager', 'admin']}><EventApproval /></ProtectedRoute>}
+      />
+      <Route
+        path="/event-approval.html"
+        element={<ProtectedRoute allowedRoles={['community_manager', 'admin']}><EventApproval /></ProtectedRoute>}
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -36,8 +36,13 @@ export default function Appeal() {
   useEffect(() => {
     async function fetchAppeals() {
       try {
-        const res = await fetch(`${API_BASE}/appeals?userId=${user.id}`, { headers: { 'x-role': user.role } });
-        if (res.ok) { const d = await res.json(); if (Array.isArray(d)) setMyAppeals(d); }
+        const res = await fetch(`${API_BASE}/appeals`, { headers: { 'x-role': user.role } });
+        if (res.ok) {
+          const d = await res.json();
+          if (Array.isArray(d)) {
+            setMyAppeals(d.filter((a) => !user.id || a.userId === user.id));
+          }
+        }
       } catch {}
     }
     fetchAppeals();
@@ -55,7 +60,13 @@ export default function Appeal() {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    const payload = { userId: user.id, appealType, statement, commitment, submittedAt: new Date().toISOString() };
+    const payload = {
+      userId: Number(user.id || 4),
+      actionId: `ACT-${Date.now()}`,
+      text: statement.trim(),
+      acknowledgement: (commitment || 'I agree to the platform community guidelines').slice(0, 95),
+      resolution: (appealType || 'Reconsideration').slice(0, 95),
+    };
     try {
       const res = await fetch(`${API_BASE}/appeals`, {
         method: 'POST',
@@ -63,7 +74,7 @@ export default function Appeal() {
         body: JSON.stringify(payload),
       });
       const data = res.ok ? await res.json() : {};
-      setRefId(data.id || `APL-${Date.now()}`);
+      setRefId(`APL-${data.id || Date.now()}`);
     } catch { setRefId(`APL-${Date.now()}`); }
     setSubmitting(false);
     setSubmitted(true);

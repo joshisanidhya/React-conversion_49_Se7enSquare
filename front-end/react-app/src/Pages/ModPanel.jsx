@@ -76,10 +76,10 @@ export default function ModPanel() {
   const takeAction = async (action, reportId) => {
     setProcessing(true);
     try {
-      const res = await fetch(`${API_BASE}/reports/${reportId}/action`, {
-        method: 'POST',
+      await fetch(`${API_BASE}/reports/${reportId}/status`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-role': user.role },
-        body: JSON.stringify({ action, note: actionNote }),
+        body: JSON.stringify({ status: 'resolved' }),
       });
     } catch {}
 
@@ -96,9 +96,13 @@ export default function ModPanel() {
 
   const moveToReview = async (reportId) => {
     try {
-      await fetch(`${API_BASE}/reports/${reportId}/review`, { method: 'POST', headers: { 'x-role': user.role } });
+      await fetch(`${API_BASE}/reports/${reportId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-role': user.role },
+        body: JSON.stringify({ status: 'reviewed' }),
+      });
     } catch {}
-    setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'review' } : r));
+    setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'reviewed' } : r));
     showToast('📋 Moved to In Review');
   };
 

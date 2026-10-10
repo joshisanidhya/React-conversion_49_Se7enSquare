@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../Components/Button';
 import '../styles/login.css';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 /**
  * Login & Authentication Component
- * Converted from login.html, featuring controlled form inputs, React state for auth tabs,
- * client-side validations, password strength meter, quick persona access, and toast alerts.
+ * Full-stack authentication connected to NestJS backend /api/auth endpoints.
+ * Features real credentials validation, JWT/role-based session persistence,
+ * and automatic role-aware routing.
  */
 export default function Login() {
+  const navigate = useNavigate();
+
   // ── 1. Tab & View State ──
   // Tabs: 'login' | 'register' | 'forgot' | 'forgot-success'
   const [currentTab, setCurrentTab] = useState('login');
@@ -21,7 +26,7 @@ export default function Login() {
     setToast({ show: true, icon, msg });
     setTimeout(() => {
       setToast({ show: false, icon: '✅', msg: '' });
-    }, 3000);
+    }, 3500);
   };
 
   const triggerShake = () => {
@@ -44,49 +49,105 @@ export default function Login() {
 
     if (!trimmedInput) {
       errors.email = 'Email or username is required.';
-    } else if (trimmedInput.includes('@') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedInput)) {
-      errors.email = 'Please enter a valid email address.';
     }
 
     if (!loginPassword) {
       errors.password = 'Password is required.';
-    } else if (loginPassword.length < 6) {
-      errors.password = 'Password must be at least 6 characters.';
-    }
-
-    if (!loginRole) {
-      errors.role = 'Please select a role to sign in as.';
     }
 
     setLoginErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     if (!validateLogin()) {
       triggerShake();
-      showToast('⚠️', 'Please correct the highlighted errors.');
+      showToast('⚠️', 'Please enter your username/email and password.');
       return;
     }
 
     setLoginLoading(true);
+    setLoginErrors(prev => ({ ...prev, general: '' }));
 
-    // Simulate login response
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          login: loginEmail.trim(),
+          password: loginPassword,
+          role: loginRole || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMsg = data.message || 'Invalid username, email, or password.';
+        triggerShake();
+        const displayMsg = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
+        setLoginErrors(prev => ({
+          ...prev,
+          general: displayMsg,
+        }));
+        showToast('❌', displayMsg);
+        setLoginLoading(false);
+        return;
+      }
+
+      // Successful login
+      const user = data;
+      localStorage.setItem('nexus_user', JSON.stringify(user));
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      localStorage.setItem('role', user.role || loginRole || 'user');
+
+      showToast('✅', `Signed in successfully as ${user.username} (${(user.role || loginRole || 'user').toUpperCase()})!`);
+
+      setTimeout(() => {
+        setLoginLoading(false);
+        // Role-based route redirection
+        switch (user.role) {
+          case 'admin':
+            navigate('/admin-dashboard');
+            break;
+          case 'owner':
+            navigate('/owner-dashboard');
+            break;
+          case 'organizer':
+            navigate('/organizer-dashboard');
+            break;
+          case 'moderator':
+            navigate('/mod-panel');
+            break;
+          case 'community_manager':
+            navigate('/event-approval');
+            break;
+          default:
+            navigate('/dashboard');
+            break;
+        }
+      }, 700);
+    } catch (err) {
+      console.error('Login request failed:', err);
+      triggerShake();
+      const failMsg = 'Cannot reach authentication server at ' + API_BASE;
+      setLoginErrors(prev => ({ ...prev, general: failMsg }));
+      showToast('❌', failMsg);
       setLoginLoading(false);
-      showToast('✅', `Signed in successfully as ${loginRole.toUpperCase()}!`);
-    }, 1000);
+    }
   };
 
-  // ── 4. Quick Persona Login Handler ──
+  // ── 4. Real Backend Persona Access Handler ──
   const personas = [
-    { name: 'RAJAT JAIN (ADMIN)', username: 'rajat', role: 'admin', icon: '🛡️', pass: 'Rajat@123' },
-    { name: 'KARMANYA (MOD)', username: 'karmanya', role: 'moderator', icon: '🔍', pass: 'Karmanya@123' },
-    { name: 'ANANT (CM)', username: 'anant', role: 'community_manager', icon: '📅', pass: 'Demo@123' },
-    { name: 'ORGANIZER (ORG)', username: 'org01', role: 'organizer', icon: '🏆', pass: 'Demo@123' },
-    { name: 'AWADHESH (USER)', username: 'awadhesh', role: 'user', icon: '🎮', pass: 'Demo@123' },
-    { name: 'SANIDHYA (OWNER)', username: 'sanidhya', role: 'owner', icon: '👑', pass: 'Demo@123' },
+    { name: 'ADMIN (admin01)', username: 'admin01', role: 'admin', icon: '🛡️', pass: 'Demo@123' },
+    { name: 'MOD (mod01)', username: 'mod01', role: 'moderator', icon: '🔍', pass: 'Demo@123' },
+    { name: 'CM (cm01)', username: 'cm01', role: 'community_manager', icon: '📅', pass: 'Demo@123' },
+    { name: 'ORGANIZER (org01)', username: 'org01', role: 'organizer', icon: '🏆', pass: 'Demo@123' },
+    { name: 'PLAYER (player01)', username: 'player01', role: 'user', icon: '🎮', pass: 'Demo@123' },
+    { name: 'OWNER (sanidhya)', username: 'sanidhya', role: 'owner', icon: '👑', pass: 'Demo@123' },
   ];
 
   const handleQuickLogin = (p) => {
@@ -164,7 +225,7 @@ export default function Login() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (!validateRegister()) {
       triggerShake();
@@ -173,15 +234,59 @@ export default function Login() {
     }
 
     setRegLoading(true);
-    setTimeout(() => {
+    setRegErrors(prev => ({ ...prev, general: '' }));
+
+    try {
+      const nameParts = regFullName.trim().split(/\s+/);
+      const firstName = nameParts[0] || regFullName.trim();
+      const lastName = nameParts.slice(1).join(' ') || undefined;
+
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: regHandle.trim(),
+          email: regEmail.trim(),
+          password: regPassword,
+          role: regRole || 'user',
+          firstName,
+          lastName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMsg = data.message || 'Registration failed.';
+        triggerShake();
+        const displayMsg = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
+        showToast('❌', displayMsg);
+        setRegErrors(prev => ({
+          ...prev,
+          general: displayMsg,
+        }));
+        setRegLoading(false);
+        return;
+      }
+
       setRegLoading(false);
-      showToast('🎉', 'Account created successfully! Switching to login...');
+      showToast('🎉', `Account @${data.username} created successfully! Please sign in.`);
       setTimeout(() => {
         setCurrentTab('login');
-        setLoginEmail(regHandle);
+        setLoginEmail(data.username);
         setLoginPassword(regPassword);
+        setLoginRole(data.role || regRole);
       }, 1000);
-    }, 1200);
+    } catch (err) {
+      console.error('Registration error:', err);
+      triggerShake();
+      const failMsg = 'Unable to connect to registration server at ' + API_BASE;
+      setRegErrors(prev => ({ ...prev, general: failMsg }));
+      showToast('❌', failMsg);
+      setRegLoading(false);
+    }
   };
 
   // ── 6. Forgot Password State ──
@@ -280,6 +385,24 @@ export default function Login() {
           ═══════════════════════════════════════ */}
           {currentTab === 'login' && (
             <form className="auth-form" onSubmit={handleLoginSubmit} noValidate>
+              {loginErrors.general && (
+                <div className="auth-alert error" style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#fca5a5',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
+                  fontSize: '13px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>⚠️</span>
+                  <span>{loginErrors.general}</span>
+                </div>
+              )}
+
               <div className="form-group">
                 <label className="form-label" htmlFor="login-email">
                   Email or Username
@@ -370,9 +493,8 @@ export default function Login() {
                     setLoginRole(e.target.value);
                     if (loginErrors.role) setLoginErrors((prev) => ({ ...prev, role: '' }));
                   }}
-                  required
                 >
-                  <option value="">Select your role</option>
+                  <option value="">Auto-detect from Account</option>
                   <option value="admin">🛡️ System Admin</option>
                   <option value="owner">👑 Platform Owner</option>
                   <option value="community_manager">📅 Community Manager</option>
@@ -447,6 +569,24 @@ export default function Login() {
           ═══════════════════════════════════════ */}
           {currentTab === 'register' && (
             <form className="auth-form" onSubmit={handleRegisterSubmit} noValidate>
+              {regErrors.general && (
+                <div className="auth-alert error" style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#fca5a5',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
+                  fontSize: '13px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>⚠️</span>
+                  <span>{regErrors.general}</span>
+                </div>
+              )}
+
               <div className="form-group">
                 <label className="form-label" htmlFor="reg-fullname">
                   Full Name

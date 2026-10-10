@@ -7,6 +7,14 @@ import '../styles/event-approval.css';
 
 const API_BASE = 'http://localhost:3000/api';
 
+function getRole() {
+  try {
+    const stored = localStorage.getItem('nexus_user') || localStorage.getItem('currentUser');
+    const raw = stored ? JSON.parse(stored) : {};
+    return raw.role || 'community_manager';
+  } catch { return 'community_manager'; }
+}
+
 export default function EventApproval() {
   const navigate = useNavigate();
 
@@ -27,10 +35,11 @@ export default function EventApproval() {
     let evList = [];
     let commList = [];
 
+    const role = getRole();
     try {
       const [evRes, commRes] = await Promise.all([
-        fetch(`${API_BASE}/events`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-        fetch(`${API_BASE}/communities`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        fetch(`${API_BASE}/events`, { headers: { 'x-role': role } }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        fetch(`${API_BASE}/communities`, { headers: { 'x-role': role } }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
       ]);
       evList = evRes;
       commList = commRes;
@@ -92,7 +101,10 @@ export default function EventApproval() {
     try {
       await fetch(`${API_BASE}/events/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': getRole(),
+        },
         body: JSON.stringify({ status: 'approved' }),
       });
       showToast('✅ Event approved — all users will now see it.');
@@ -108,7 +120,10 @@ export default function EventApproval() {
     try {
       await fetch(`${API_BASE}/events/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': getRole(),
+        },
         body: JSON.stringify({ status: 'rejected' }),
       });
       showToast('❌ Event rejected.');

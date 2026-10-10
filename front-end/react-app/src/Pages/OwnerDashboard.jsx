@@ -7,8 +7,24 @@ import '../styles/admin-dashboard.css';
 
 const API_BASE = 'http://localhost:3000/api';
 
+function getCurrentUser() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('nexus_user') || localStorage.getItem('currentUser') || '{}');
+    return {
+      id: raw.id || 1,
+      username: raw.username || 'owner',
+      firstName: raw.firstName || 'Owner',
+      lastName: raw.lastName || '',
+      role: raw.role || 'owner',
+    };
+  } catch {
+    return { id: 1, username: 'owner', firstName: 'Owner', lastName: '', role: 'owner' };
+  }
+}
+
 export default function OwnerDashboard() {
   const navigate = useNavigate();
+  const currentUser = getCurrentUser();
 
   const [stats, setStats] = useState({
     totalCommunities: 0,
@@ -39,7 +55,9 @@ export default function OwnerDashboard() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const res = await fetch(`${API_BASE}/dashboard/stats`);
+        const res = await fetch(`${API_BASE}/dashboard/stats`, {
+          headers: { 'x-role': currentUser.role || 'owner' },
+        });
         if (res.ok) {
           const data = await res.json();
           setStats({
@@ -65,7 +83,9 @@ export default function OwnerDashboard() {
       }
 
       try {
-        const revRes = await fetch(`${API_BASE}/dashboard/revenue`);
+        const revRes = await fetch(`${API_BASE}/dashboard/revenue`, {
+          headers: { 'x-role': currentUser.role || 'owner' },
+        });
         if (revRes.ok) {
           const revData = await revRes.json();
           setRevenue({
@@ -179,7 +199,9 @@ export default function OwnerDashboard() {
         setDrillTitle('Revenue — All Transactions');
         let payments = [];
         try {
-          const res = await fetch(`${API_BASE}/payments/history`);
+          const res = await fetch(`${API_BASE}/payments/history`, {
+            headers: { 'x-role': currentUser.role || 'owner' },
+          });
           payments = res.ok ? await res.json() : [];
         } catch {
           payments = [
@@ -217,7 +239,9 @@ export default function OwnerDashboard() {
         setDrillTitle('Subscriptions Status');
         let subData = { byPlan: { free: 120, plus: 34, ultra_pro: 11 }, subscribers: [] };
         try {
-          const res = await fetch(`${API_BASE}/subscriptions`);
+          const res = await fetch(`${API_BASE}/subscriptions`, {
+            headers: { 'x-role': currentUser.role || 'owner' },
+          });
           if (res.ok) subData = await res.json();
         } catch {
           // fallback
@@ -245,7 +269,9 @@ export default function OwnerDashboard() {
         setDrillTitle(title);
         let orgs = [];
         try {
-          const res = await fetch(`${API_BASE}/organisers?status=${filter}`);
+          const res = await fetch(`${API_BASE}/organisers?status=${filter}`, {
+            headers: { 'x-role': currentUser.role || 'owner' },
+          });
           orgs = res.ok ? await res.json() : [];
         } catch {
           orgs = [

@@ -60,25 +60,74 @@ export default function CommunityPage() {
     async function fetchCommunity() {
       if (!id) { setLoading(false); return; }
       try {
-        const res = await fetch(`${API_BASE}/communities/${id}`, { headers: { 'x-role': user.role } });
-        if (res.ok) {
-          const data = await res.json();
+        const [commRes, memsRes] = await Promise.all([
+          fetch(`${API_BASE}/communities/${id}`, { headers: { 'x-role': user.role } }),
+          user.id ? fetch(`${API_BASE}/memberships?userId=${user.id}`, { headers: { 'x-role': user.role } }) : Promise.resolve(null),
+        ]);
+        if (commRes.ok) {
+          const data = await commRes.json();
           setCommunity({ ...DEFAULT_COMMUNITY, ...data });
+        }
+        if (memsRes && memsRes.ok) {
+          const mems = await memsRes.json();
+          if (Array.isArray(mems)) {
+            setJoined(mems.some((m) => String(m.communityId) === String(id)));
+          }
         }
       } catch {}
       setLoading(false);
     }
     fetchCommunity();
-  }, [id, user.role]);
+  }, [id, user.role, user.id]);
 
   const toggleJoin = async () => {
     const next = !joined;
     setJoined(next);
     try {
-      await fetch(`${API_BASE}/communities/${community.id}/${next ? 'join' : 'leave'}`, {
-        method: 'POST', headers: { 'x-role': user.role },
+      if (next) {
+        await fetch(`${API_BASE}/memberships`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-role': user.role,
+          },
+          body: JSON.stringify({
+            userId: user.id || 4,
+            communityId: Number(community.id),
+          }),
+        });
+      } else {
+        const memsRes = await fetch(`${API_BASE}/memberships?userId=${user.id || 4}`, {
+          headers: { 'x-role': user.role },
+        });
+        if (memsRes.ok) {
+          const mems = await memsRes.json();
+          const target = mems.find((m) => String(m.communityId) === String(community.id));
+          if (target) {
+            await fetch(`${API_BASE}/memberships/${target.id}`, {
+              method: 'DELETE',
+              headers: { 'x-role': user.role },
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Membership toggle error:', err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete community "${community.name}"? This cannot be undone.`)) return;
+    try {
+      await fetch(`${API_BASE}/communities/${community.id}`, {
+        method: 'DELETE',
+        headers: { 'x-role': user.role },
       });
-    } catch {}
+      navigate('/discovery');
+    } catch (err) {
+      console.error('Delete error:', err);
+      navigate('/discovery');
+    }
   };
 
   const filteredMembers = community.members_list?.filter(m =>
@@ -167,11 +216,7 @@ export default function CommunityPage() {
             {canDelete && (
               <button
                 id="rbacDeleteBtn"
-                onClick={() => {
-                  if (window.confirm(`Delete community "${community.name}"? This cannot be undone.`)) {
-                    navigate('/dashboard');
-                  }
-                }}
+                onClick={handleDelete}
                 style={{
                   background: 'rgba(255,68,68,0.1)', color: 'var(--danger)', border: '1px solid rgba(255,68,68,0.2)',
                   borderRadius: '8px', padding: '0 16px', fontWeight: 600, cursor: 'pointer',

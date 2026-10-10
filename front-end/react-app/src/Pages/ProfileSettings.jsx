@@ -142,15 +142,24 @@ export default function ProfileSettings() {
       setIsDirty(false);
 
       // Attempt live backend update
+      const patchBody = {
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+      };
+      if (updatedUser.bio && updatedUser.bio.length >= 5 && updatedUser.bio.length <= 160) {
+        patchBody.bio = updatedUser.bio;
+      }
+      if (updatedUser.avatar && updatedUser.avatar.length <= 300) {
+        patchBody.avatar = updatedUser.avatar;
+      }
+
       await fetch(`${API_BASE}/users/${user.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: updatedUser.firstName,
-          lastName: updatedUser.lastName,
-          bio: updatedUser.bio,
-          avatar: updatedUser.avatar,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': user.role || 'user',
+        },
+        body: JSON.stringify(patchBody),
       }).catch(() => {});
 
       showToast('✅ Profile & settings saved successfully!');
@@ -169,8 +178,11 @@ export default function ProfileSettings() {
     try {
       await fetch(`${API_BASE}/organisers/apply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': user.role || 'user',
+        },
+        body: JSON.stringify({ userId: Number(user.id), experienceNote: 'Community member seeking organizer access' }),
       });
       showToast('🏆 Organizer application submitted for admin review!');
     } catch {
@@ -178,11 +190,31 @@ export default function ProfileSettings() {
     }
   };
 
-  const submitQuiz = () => {
+  const submitQuiz = async () => {
     if (!quizAnswers.q1 || !quizAnswers.q2 || !quizAnswers.q3) {
       showToast('⚠️ Please answer all questions.');
       return;
     }
+    const ansMap = { a: 0, b: 1, c: 2, d: 3 };
+    const ansArray = [ansMap[quizAnswers.q1] || 0, ansMap[quizAnswers.q2] || 0, ansMap[quizAnswers.q3] || 0];
+
+    try {
+      const res = await fetch(`${API_BASE}/moderator-certification/apply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': user.role || 'user',
+        },
+        body: JSON.stringify({ userId: Number(user.id), answers: ansArray }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setQuizScore(data.score !== undefined ? data.score : 3);
+        showToast('🎉 Application submitted for admin review!');
+        return;
+      }
+    } catch {}
+
     const correct = (quizAnswers.q1 === 'b' ? 1 : 0) + (quizAnswers.q2 === 'c' ? 1 : 0) + (quizAnswers.q3 === 'a' ? 1 : 0);
     setQuizScore(correct);
     if (correct >= 2) {

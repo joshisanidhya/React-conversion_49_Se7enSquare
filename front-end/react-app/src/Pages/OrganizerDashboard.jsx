@@ -106,7 +106,9 @@ export default function OrganizerDashboard() {
 
     // Profile & Analytics
     try {
-      const profRes = await fetch(`${API_BASE}/organisers/profile/${currentUser.id}`);
+      const profRes = await fetch(`${API_BASE}/organisers/profile?userId=${currentUser.id}`, {
+        headers: { 'x-role': currentUser.role || 'organizer' },
+      });
       if (profRes.ok) {
         const prof = await profRes.json();
         setOrganizerProfile(prof);
@@ -119,7 +121,9 @@ export default function OrganizerDashboard() {
     }
 
     try {
-      const anaRes = await fetch(`${API_BASE}/organisers/analytics/${currentUser.id}`);
+      const anaRes = await fetch(`${API_BASE}/organisers/analytics?userId=${currentUser.id}`, {
+        headers: { 'x-role': currentUser.role || 'organizer' },
+      });
       if (anaRes.ok) {
         const ana = await anaRes.json();
         setEarnings(Number(ana.estimatedOrganiserEarnings || 0).toLocaleString());
@@ -137,10 +141,13 @@ export default function OrganizerDashboard() {
 
   const handleUpgradePlan = async () => {
     try {
-      const res = await fetch(`${API_BASE}/organisers/upgrade/${currentUser.id}`, {
+      const res = await fetch(`${API_BASE}/organisers/subscription/upgrade`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: 'premium' }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': currentUser.role || 'organizer',
+        },
+        body: JSON.stringify({ userId: Number(currentUser.id), plan: 'premium' }),
       });
       if (res.ok) {
         showToast('🏆 Upgraded to Premium Organizer!');
@@ -166,8 +173,11 @@ export default function OrganizerDashboard() {
     try {
       const res = await fetch(`${API_BASE}/featured-events`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, userId: currentUser.id, durationDays: 7 }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-role': currentUser.role || 'organizer',
+        },
+        body: JSON.stringify({ eventId: Number(eventId), userId: Number(currentUser.id), durationDays: 7 }),
       });
       if (res.ok) {
         showToast('📣 Promoted to the Discover carousel for 7 days');
@@ -182,7 +192,10 @@ export default function OrganizerDashboard() {
   const handleDeleteEvent = async (id) => {
     if (!window.confirm('Delete this tournament? This cannot be undone.')) return;
     try {
-      await fetch(`${API_BASE}/events/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/events/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-role': currentUser.role || 'organizer' },
+      });
       showToast('🗑️ Tournament deleted');
     } catch {
       showToast('🗑️ Tournament deleted');
@@ -262,7 +275,10 @@ export default function OrganizerDashboard() {
       if (modalMode === 'create') {
         const res = await fetch(`${API_BASE}/events`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-role': currentUser.role || 'organizer',
+          },
           body: JSON.stringify(payload),
         });
         const created = res.ok ? await res.json() : { ...payload, id: Date.now() };
@@ -271,7 +287,10 @@ export default function OrganizerDashboard() {
       } else {
         const res = await fetch(`${API_BASE}/events/${editEventId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-role': currentUser.role || 'organizer',
+          },
           body: JSON.stringify(payload),
         });
         const updated = res.ok ? await res.json() : { ...payload, id: editEventId };

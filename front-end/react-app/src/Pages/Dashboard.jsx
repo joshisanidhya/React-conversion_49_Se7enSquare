@@ -28,13 +28,14 @@ function getCurrentUser() {
     const stored = localStorage.getItem('nexus_user') || localStorage.getItem('currentUser');
     const raw = stored ? JSON.parse(stored) : {};
     return {
-      firstName: raw.firstName || raw.username || 'Rajat',
-      lastName: raw.lastName || 'Jain',
-      username: raw.username || 'rajatjain',
-      role: raw.role || 'admin',
+      id: raw.id || 4,
+      firstName: raw.firstName || raw.username || 'User',
+      lastName: raw.lastName || '',
+      username: raw.username || 'player01',
+      role: raw.role || 'user',
     };
   } catch {
-    return { firstName: 'Rajat', lastName: 'Jain', username: 'rajatjain', role: 'admin' };
+    return { id: 4, firstName: 'User', lastName: '', username: 'player01', role: 'user' };
   }
 }
 
@@ -59,9 +60,10 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [commsRes, eventsRes] = await Promise.all([
+        const [commsRes, eventsRes, notifsRes] = await Promise.all([
           fetch(`${API_BASE}/communities`, { headers: { 'x-role': user.role } }),
           fetch(`${API_BASE}/events`, { headers: { 'x-role': user.role } }),
+          fetch(`${API_BASE}/notifications?userId=${user.id}`, { headers: { 'x-role': user.role } }),
         ]);
         if (commsRes.ok) {
           const data = await commsRes.json();
@@ -80,6 +82,18 @@ export default function Dashboard() {
             })));
           }
         }
+        if (notifsRes.ok) {
+          const notifsData = await notifsRes.json();
+          if (Array.isArray(notifsData) && notifsData.length > 0) {
+            setNotifications(notifsData.slice(0, 5).map(n => ({
+              id: n.id,
+              icon: n.type === 'reaction' ? '💬' : n.type === 'report_status' ? '🛡️' : '🔔',
+              text: n.text,
+              time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+              read: n.read,
+            })));
+          }
+        }
       } catch {
         // Fallback to default data — backend may not be running
       } finally {
@@ -87,7 +101,7 @@ export default function Dashboard() {
       }
     }
     fetchData();
-  }, [user.role]);
+  }, [user.role, user.id]);
 
   const handleSearch = (val) => {
     setSearchQuery(val);
