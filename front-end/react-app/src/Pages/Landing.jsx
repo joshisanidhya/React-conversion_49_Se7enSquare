@@ -185,6 +185,9 @@ export default function Landing() {
               <Link to="/login" style={{ textDecoration: 'none' }}>
                 <Button className="btn-hero">Start for free →</Button>
               </Link>
+              <Link to="/discovery" style={{ textDecoration: 'none' }}>
+                <button type="button" className="btn-hero-secondary">Explore communities</button>
+              </Link>
             </div>
 
             <div className="hero-stat-row">
@@ -311,6 +314,24 @@ export default function Landing() {
       <div className="logos">
         <div className="logos-inner">
           <span className="logos-label">Trusted by 3,200+ active communities worldwide</span>
+          <div className="logos-track-wrap">
+            <div className="logos-track">
+              <div className="logo-chip">⚡ Dev Nexus</div>
+              <div className="logo-chip">🎨 Design Studio</div>
+              <div className="logo-chip">🌱 Open Source Hub</div>
+              <div className="logo-chip">🏆 Hackathon HQ</div>
+              <div className="logo-chip">🎮 GameCraft Guild</div>
+              <div className="logo-chip">🚀 NextGen Founders</div>
+              <div className="logo-chip">🤖 AI Innovators</div>
+              <div className="logo-chip">⚡ Dev Nexus</div>
+              <div className="logo-chip">🎨 Design Studio</div>
+              <div className="logo-chip">🌱 Open Source Hub</div>
+              <div className="logo-chip">🏆 Hackathon HQ</div>
+              <div className="logo-chip">🎮 GameCraft Guild</div>
+              <div className="logo-chip">🚀 NextGen Founders</div>
+              <div className="logo-chip">🤖 AI Innovators</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -749,6 +770,9 @@ export default function Landing() {
             <div className="cta-btns">
               <Link to="/login" style={{ textDecoration: 'none' }}>
                 <Button className="btn-hero">Create your community →</Button>
+              </Link>
+              <Link to="/pricing" style={{ textDecoration: 'none' }}>
+                <button type="button" className="btn-hero-secondary">View pricing</button>
               </Link>
             </div>
           </div>

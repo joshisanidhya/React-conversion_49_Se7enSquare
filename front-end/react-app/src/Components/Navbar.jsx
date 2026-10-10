@@ -15,7 +15,6 @@ export default function Navbar() {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // Initial check
     handleScroll();
 
     return () => {
@@ -23,9 +22,9 @@ export default function Navbar() {
     };
   }, []);
 
-  const handleFeaturesClick = (e) => {
+  const handleScrollTo = (id) => (e) => {
     if (location.pathname === '/' || location.pathname === '/landing') {
-      const el = document.getElementById('features');
+      const el = document.getElementById(id);
       if (el) {
         e.preventDefault();
         el.scrollIntoView({ behavior: 'smooth' });
@@ -41,9 +40,15 @@ export default function Navbar() {
       </Link>
 
       <div className="nav-links">
-        <a className="nav-link" href="#features" onClick={handleFeaturesClick}>
+        <a className="nav-link" href="#features" onClick={handleScrollTo('features')}>
           Features
         </a>
+        <a className="nav-link" href="#how" onClick={handleScrollTo('how')}>
+          How It Works
+        </a>
+        <Link className="nav-link" to="/discovery">
+          Discover
+        </Link>
         <Link className="nav-link" to="/pricing">
           Pricing
         </Link>

@@ -597,7 +597,7 @@ body {
 .card:hover,
 .stat-card:hover,
 .panel-card:hover,
-.section-card:hover:hover,
+.section-card:hover,
 .event-card:hover,
 .pinned-card:hover,
 .rules-card:hover {
